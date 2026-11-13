@@ -90,14 +90,16 @@ def load_participants(cfg):
     c_wish = find_column(headers, col.get("onskemal"), ["önsk", "onsk", "tips"], required=False)
     c_nope = find_column(headers, col.get("inte_ha"), ["inte ha", "inte vill", "undvik"], required=False)
 
-    # Senaste svaret per mejladress vinner (om någon fyllt i två gånger)
+    # Senaste svaret per (namn, mejladress) vinner om någon fyllt i två gånger.
+    # Flera namn på samma adress är okej – t.ex. mamma som fyller i åt mormor.
+    # Då får adressen ett mejl per person.
     people = {}
     for r in rows:
         email = (r.get(c_mail) or "").strip().lower()
         name = (r.get(c_name) or "").strip()
         if not email or not name:
             continue
-        people[email] = {
+        people[(name.lower(), email)] = {
             "namn": name,
             "epost": email,
             "budget": (r.get(c_budget) or "").strip() if c_budget else "",

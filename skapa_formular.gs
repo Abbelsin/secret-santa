@@ -7,7 +7,9 @@ function skapaSecretSanta() {
     .setLimitOneResponsePerUser(false)
     .setAllowResponseEdits(true);
 
-  form.addTextItem().setTitle('Namn').setRequired(true);
+  form.addTextItem().setTitle('Namn')
+    .setHelpText('Fyller du i åt någon utan e-post? Skriv deras namn här och skicka ett eget svar för dem – deras kod mejlas till dig.')
+    .setRequired(true);
 
   form.addMultipleChoiceItem()
     .setTitle('Budget?')
