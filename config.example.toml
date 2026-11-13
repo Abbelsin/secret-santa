@@ -1,0 +1,38 @@
+# Secret Santa – inställningar
+
+# Gmail-kontot som skickar (gärna ett nytt, t.ex. familjens.tomte@gmail.com)
+gmail = "familjens.tomte@gmail.com"
+avsandarnamn = "Tomten"
+amne = "🎅 Din Secret Santa-kod!"
+
+# Adressen till sidan på GitHub Pages
+sida_url = "https://abbelsin.github.io/secret-santa/"
+
+# CSV från Google Forms (Arkiv → Ladda ned → CSV), relativt mappen santa.py ligger i.
+# Committas aldrig (se .gitignore).
+csv_fil = "svar.csv"
+
+# Par som inte får dra varandra (namnen exakt som de skrivit i formuläret, skiftläge spelar ingen roll)
+far_inte_dra_varandra = [
+  # ["Albin", "Flickvännens namn"],
+  # ["Mamma", "Pappa"],
+]
+
+# Undvik att A har B och B har A samtidigt
+undvik_att_dra_varandra = true
+
+# Lämna bortkommenterad för att ta medianen av rösterna, eller sätt ett fast belopp
+# budget = 300
+
+extra_text = "Ta med klappen till julafton!"
+
+# Radera mejlen ur Skickat + papperskorgen automatiskt efter utskick
+rensa_skickat = true
+
+# Hittar skriptet inte rätt kolumner automatiskt? Skriv rubrikerna exakt som i CSV:n:
+[kolumner]
+# namn = "Namn"
+# epost = "E-postadress"
+# budget = "Budget?"
+# onskemal = "Önskemål eller tips"
+# inte_ha = "Något du inte vill ha"

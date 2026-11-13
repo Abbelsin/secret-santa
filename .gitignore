@@ -1,0 +1,5 @@
+# Personuppgifter och hemligheter – committas aldrig
+config.toml
+*.csv
+lottning.dat
+__pycache__/

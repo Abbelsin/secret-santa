@@ -1,0 +1,40 @@
+{
+ "v": 1,
+ "salt": "BzKvLnsUVOJE/eibnu5hSA==",
+ "iter": 250000,
+ "palette": [
+  "⛄",
+  "🎅",
+  "🎄",
+  "🎁",
+  "⭐",
+  "🦌",
+  "🍪",
+  "🔔",
+  "🧦",
+  "🍬",
+  "🌟",
+  "🧤",
+  "🍭",
+  "🧣",
+  "🛷"
+ ],
+ "codeLength": 3,
+ "entries": [
+  {
+   "n": "375gC/2MkfZojXkhbye1ug==",
+   "c": "SLiNeDgGFjkgn3HtJTHM5z3ZDREJBSv4PpUtwDrZzp7XNCBmo/d9jOcNzlfxlpHzpJtTtQRRNKScIS4dXG8O0tfGqaZRqmHHjGA4aShzKXQpbo7BCrQlc0QLiUE650sNxu6jnbL3GEARaCvn/gQ0",
+   "t": "bnK+tyjEhnEImJnsFW9umg=="
+  },
+  {
+   "n": "W3/1jsfvTXqVt5usvlNSjw==",
+   "c": "6q8izSe2iRvw0MbGIMcQsSOhRdDAwm0xj6JmChJiCfgMRnuoaLlY/8CixCWqXZCSvk0/x3tZnBT+IratU7SaJjCRGXZT0AH2UB+a5l0L9wzAHowCudAyNGls0t+jcslzQfC/RQQeje7tH12UeI3bUjPqGOZSCT5hycu2R+WFFVy2SPZkkOzfFVjsBW4=",
+   "t": "7BbRF+q8emnmlZG2tOpqiQ=="
+  },
+  {
+   "n": "XzgBYyHdxMluErPmtme9bw==",
+   "c": "acZ6xJkxLnclxstWus+0vFX85If2PeFlKIZ5Zl0Rpeg9y/6IUXU4z0P0DEWuFkgCqpEPRbmXcMo/F4Z3N/vfirg/SWmsP/3Dt7xe/TWxXNf1o4p3X+oOAM4NL/finn+U3pUxYwNTrtNLnueU+lNwydOs",
+   "t": "1C/WlAn80MyfFKcHPR4RfA=="
+  }
+ ]
+}
