@@ -139,6 +139,12 @@ def exclusion_set(cfg, people):
                          f"Deltagare: {', '.join(sorted(known))}")
         excl.add((a, b))
         excl.add((b, a))
+    # Personer med samma mejladress (t.ex. mamma som fyllt i åt mormor) får inte dra
+    # varandra – annars ser den som läser mejlen båda sidor av paret.
+    for p in people:
+        for q in people:
+            if p is not q and p["epost"] == q["epost"]:
+                excl.add((p["namn"].lower(), q["namn"].lower()))
     return excl
 
 
@@ -160,7 +166,7 @@ def draw(people, excl, avoid_mutual):
             continue
         return pairs
     sys.exit("Hittade ingen giltig lottning – för många regler? Prova att ta bort några "
-             "eller sätt undvik_att_dra_varandra = false.")
+             "eller sätt undvik_att_dra_varandra = false om den är på.")
 
 
 def make_codes(n):
@@ -344,7 +350,7 @@ def cmd_kolla(cfg):
     print(f"\nBudget som kommer användas: {budget} kr"
           + (" (från config)" if cfg.get("budget") else " (median av rösterna)"))
     print(f"Regler: {len(excl) // 2} par som inte får dra varandra")
-    draw(people, excl, cfg.get("undvik_att_dra_varandra", True))  # bara test att det går, kastas
+    draw(people, excl, cfg.get("undvik_att_dra_varandra", False))  # bara test att det går, kastas
     print("✅ En giltig lottning är möjlig. Kör 'lotta' när alla har svarat.")
 
 
@@ -365,7 +371,7 @@ def cmd_lotta(cfg, force):
     people = load_participants(cfg)
     excl = exclusion_set(cfg, people)
     budget = decide_budget(cfg, people)
-    pairs = draw(people, excl, cfg.get("undvik_att_dra_varandra", True))
+    pairs = draw(people, excl, cfg.get("undvik_att_dra_varandra", False))
 
     by_name = {p["namn"].lower(): p for p in people}
     codes = make_codes(len(pairs))

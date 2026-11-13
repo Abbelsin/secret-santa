@@ -18,8 +18,9 @@ far_inte_dra_varandra = [
   # ["Mamma", "Pappa"],
 ]
 
-# Undvik att A har B och B har A samtidigt
-undvik_att_dra_varandra = true
+# true = undvik att A har B och B har A samtidigt. false = helt slumpmässigt.
+# (Personer med samma mejladress drar aldrig varandra, oavsett inställning.)
+undvik_att_dra_varandra = false
 
 # Lämna bortkommenterad för att ta medianen av rösterna, eller sätt ett fast belopp
 # budget = 300
