@@ -25,5 +25,6 @@ budgetröster publiceras aldrig.
 9. **Tappat koden?** `python3 santa.py skicka-igen Mamma`
 
 `config.toml`, `svar.csv` och `lottning.dat` committas aldrig (se `.gitignore`).
-Kräver Python 3.11+, inga beroenden. Gmail-kontot behöver ett app-lösenord
+Kräver Python 3.11+, inga beroenden. Gmail-kontot behöver ett app-lösenord; annan mejltjänst
+väljs med `smtp_server` i config och använder kontots vanliga lösenord
 (sätt `SANTA_APP_PASSWORD` eller skriv in det när du blir tillfrågad).

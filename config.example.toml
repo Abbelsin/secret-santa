@@ -1,7 +1,12 @@
 # Secret Santa – inställningar
 
-# Gmail-kontot som skickar (gärna ett nytt, t.ex. familjens.tomte@gmail.com)
+# Mejladressen som skickar. Med Gmail: ditt vanliga konto funkar, det behöver bara ett app-lösenord.
 gmail = "familjens.tomte@gmail.com"
+
+# Annan mejltjänst än Gmail? Ta bort # och fyll i tjänstens SMTP-server (då är "gmail" ovan
+# din adress där, och lösenordet är kontots vanliga). Port 465 (SSL) eller 587 (STARTTLS).
+# smtp_server = "mail.gmx.com"
+# smtp_port = 587
 avsandarnamn = "Tomten"
 amne = "🎅 Din Secret Santa-kod!"
 
