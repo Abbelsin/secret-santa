@@ -6,7 +6,9 @@ sidan och får se vem de ska ge en klapp till.
 Namnen ligger krypterade i `data.json`. Varje post kan bara öppnas med rätt kod
 (PBKDF2-SHA256 + HMAC), så ingen kan läsa dem i källkoden. Med tre emojis ur femton
 finns 3 375 koder, så det håller mot tjuvkikande familjemedlemmar men inte mot någon
-som är beslutsam.
+som är beslutsam. Därför publiceras bara förnamn – heter två likadant läggs så
+mycket av efternamnet till som behövs ("Anna S." och "Anna L."). Mejladresser och
+budgetröster publiceras aldrig.
 
 **Demo:** sidan har testdata nu. Prova ⛄🎅🎄, 🎁⭐🦌 eller 🍪🔔🧦.
 

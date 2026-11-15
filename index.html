@@ -3,25 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b1d3a">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎁</text></svg>">
 <title>🎅 Secret Santa</title>
 <style>
+  /* Obs: inga halvgenomskinligt vita ytor. Webbläsare med "tvingat mörkt läge" (t.ex. Vivaldi)
+     vänder på ljusa färger, så knappar och kort försvann där. Blå toner lämnas i fred. */
   :root {
-    --bg1: #0b1d3a; --bg2: #1d3b6b; --card: rgba(255,255,255,.08);
+    color-scheme: dark;
+    --bg1: #0b1d3a; --bg2: #1d3b6b; --card: rgba(96,128,190,.2); --card-hi: rgba(120,152,214,.36);
+    --line: rgba(150,176,226,.4);
     --text: #f4f1ea; --muted: #b9c3d6; --red: #c8323c; --green: #2f7d4f; --gold: #f2c14e;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  button { touch-action: manipulation; font-family: inherit; -webkit-user-select: none; user-select: none; }
+  button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   html, body { margin: 0; height: 100%; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--text);
     background: radial-gradient(ellipse at top, var(--bg2), var(--bg1) 70%) fixed;
     display: flex; justify-content: center; align-items: flex-start;
-    min-height: 100%; overflow-x: hidden;
+    min-height: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%;
   }
   #snow { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
   main {
     position: relative; z-index: 1; width: 100%; max-width: 420px;
-    padding: max(28px, env(safe-area-inset-top)) 20px 40px; text-align: center;
+    padding: max(28px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); text-align: center;
+    /* Innehållet hamnar mitt på skärmen på höga mobiler i stället för att klumpa ihop sig upptill */
+    min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center;
+    overflow-x: clip;
   }
   h1 { font-size: 2rem; margin: 8px 0 4px; letter-spacing: .5px; }
   .sub { color: var(--muted); margin: 0 0 28px; font-size: 1rem; line-height: 1.4; }
@@ -29,13 +42,13 @@
   .slots { display: flex; gap: 14px; justify-content: center; margin-bottom: 28px; }
   .slot {
     width: 74px; height: 74px; border-radius: 18px;
-    background: var(--card); border: 2px dashed rgba(255,255,255,.25);
+    background: var(--card); border: 2px dashed var(--line);
     display: grid; place-items: center; font-size: 2.6rem;
-    transition: transform .15s, border-color .2s, background .2s;
+    transition: transform var(--t-emojiPop), border-color .2s, background .2s;
   }
   .slot.filled { border-style: solid; border-color: var(--gold); background: rgba(242,193,78,.12); }
   .slot.pop { transform: scale(1.12); }
-  .shake { animation: shake .45s; }
+  .shake { animation: shake var(--t-felSkak); }
   @keyframes shake {
     0%,100% { transform: translateX(0); } 20% { transform: translateX(-10px); }
     40% { transform: translateX(10px); } 60% { transform: translateX(-7px); } 80% { transform: translateX(7px); }
@@ -44,53 +57,67 @@
   .pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
   .pad button {
     aspect-ratio: 1; border: 0; border-radius: 16px; background: var(--card);
-    font-size: 2rem; cursor: pointer; transition: transform .08s, background .15s;
+    font-size: 2rem; cursor: pointer; transition: transform var(--t-emojiKnapp), background .15s;
     color: var(--text);
   }
-  .pad button:active { transform: scale(.9); background: rgba(255,255,255,.18); }
+  .pad button:active { transform: scale(.9); background: var(--card-hi); }
   .row { display: flex; gap: 10px; margin-top: 12px; }
   .row button {
     flex: 1; padding: 14px; border: 0; border-radius: 14px; font-size: 1rem; font-weight: 600;
-    background: var(--card); color: var(--text); cursor: pointer;
+    background: var(--green); color: var(--text); cursor: pointer;
+  }
+  /* Ikoner: samma linjetjocklek och rundade ändar överallt */
+  .ic {
+    width: 1.25em; height: 1.25em; vertical-align: -0.25em; fill: none; stroke: currentColor;
+    stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .row button { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .back-arrow .ic { width: 22px; height: 22px; vertical-align: middle; }
+  .back-arrow { display: grid; place-items: center; }
+  /* Ange-knappen: grå tills alla emojis är inknappade, sen grön och pulserande */
+  .row #enter { flex: 1.4; background: var(--green); color: white; transition: opacity .2s, transform .1s; }
+  .row #enter:disabled { opacity: .35; cursor: default; }
+  .row #enter.ready { animation: ready 1.4s ease-in-out infinite; }
+  .row #enter:not(:disabled):active { transform: scale(.95); }
+  @keyframes ready {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(47,125,79,.7); }
+    50% { box-shadow: 0 0 0 8px rgba(47,125,79,0); }
   }
   .msg { min-height: 1.5em; margin: 16px 0 0; color: var(--muted); font-size: 1rem; }
   .msg.err { color: #ff9a9a; }
-  .spinner { display: inline-block; animation: spin 1s linear infinite; }
+  .spinner { display: inline-block; animation: spin var(--t-snurr) linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ---- Reveal ---- */
-  #reveal { display: none; }
-  .gift { position: relative; width: 160px; height: 160px; margin: 30px auto 10px; cursor: pointer; }
-  .gift .box {
-    position: absolute; bottom: 0; left: 10px; width: 140px; height: 110px;
-    background: var(--red); border-radius: 8px;
-    box-shadow: inset 0 -10px 0 rgba(0,0,0,.15);
+  #reveal { display: none; animation: fadeIn var(--t-bytScen) ease-out both; }
+  @keyframes fadeIn { from { opacity: 0; } }
+  /* Paketet ritas på tre canvas-lager (se "Paketet" i scriptet): låda, ljus och lock.
+     Canvas påverkas inte av webbläsarens tvingade mörka läge, så färgerna blir alltid rätt. */
+  .gift {
+    position: relative; display: block; width: 200px; height: 200px; margin: 30px auto 10px;
+    padding: 0; border: 0; background: none; cursor: pointer; border-radius: 16px;
   }
-  .gift .box::before, .gift .lid::before {
-    content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 22px;
-    transform: translateX(-50%); background: var(--gold);
-  }
+  .gift canvas { position: absolute; pointer-events: none; }
+  .gift .box, .gift .lid { left: 0; top: 0; width: 200px; height: 200px; }
+  .gift .box { transform-origin: 50% 95%; }
+  .gift .light { left: 50%; bottom: 0; width: 360px; height: 470px; margin-left: -180px; z-index: 1; }
   .gift .lid {
-    position: absolute; top: 28px; left: 0; width: 160px; height: 36px;
-    background: #d9434d; border-radius: 8px; transform-origin: 20% 100%;
-    transition: transform .8s cubic-bezier(.3,1.6,.5,1), opacity .8s;
+    z-index: 2; transform-origin: 50% 40%;
+    transition: transform var(--t-lockFlyger) cubic-bezier(.2,.8,.3,1), opacity var(--t-lockFlyger);
   }
-  .gift .bow {
-    position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 2.4rem;
-  }
-  .gift.wiggle { animation: wiggle 1.2s ease-in-out infinite; }
+  .gift.wiggle { animation: wiggle var(--t-paketVickar) ease-in-out infinite; }
   @keyframes wiggle {
     0%,100% { transform: rotate(0); } 10% { transform: rotate(-6deg); } 20% { transform: rotate(6deg); }
     30% { transform: rotate(-4deg); } 40% { transform: rotate(0); }
   }
-  .gift.open .lid { transform: translate(-30px, -90px) rotate(-35deg); opacity: 0; }
   .hint { color: var(--muted); }
+
 
   .card {
     display: none; margin-top: 10px; padding: 24px 20px; border-radius: 22px;
-    background: rgba(255,255,255,.1); backdrop-filter: blur(6px);
-    border: 1px solid rgba(255,255,255,.15); text-align: left;
-    animation: rise .7s ease-out both;
+    background: rgba(38,62,112,.62); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    border: 1px solid var(--line); text-align: left;
+    animation: rise var(--t-kortIn) ease-out both;
   }
   @keyframes rise { from { opacity: 0; transform: translateY(30px) scale(.95); } to { opacity: 1; transform: none; } }
   .card .hi { color: var(--muted); margin: 0 0 6px; }
@@ -106,6 +133,68 @@
     display: block; width: 100%; margin-top: 16px; padding: 14px; border: 0; border-radius: 14px;
     background: var(--green); color: white; font-size: 1rem; font-weight: 600; cursor: pointer;
   }
+
+  /* ---- Dramatisk avslöjning ---- */
+  /* Paketet mitt på skärmen, kortet dyker upp ovanför */
+  #reveal { flex-direction: column; justify-content: center; padding-top: 34px; }
+  #reveal .gift { order: 2; margin: 50px auto 10px; }
+  #reveal .hint { order: 3; margin: 6px 0 0; min-height: 1.5em; }
+  #reveal .card { order: 1; margin: 0 0 10px; animation-name: drop; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-30px) scale(.95); } to { opacity: 1; transform: none; } }
+
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .flash { position: fixed; inset: 0; background: white; z-index: 4; pointer-events: none; animation: flash var(--t-blixt) ease-out forwards; }
+  @keyframes flash { from { opacity: .85; } to { opacity: 0; } }
+  .gift.rumble { animation: rumble var(--t-skakning) ease-in both; }
+  @keyframes rumble {
+    0% { transform: rotate(1.0deg) scale(1.000) translateY(0.0px); }
+    5% { transform: rotate(-1.6deg) scale(1.006) translateY(-0.3px); }
+    10% { transform: rotate(2.3deg) scale(1.012) translateY(-0.6px); }
+    15% { transform: rotate(-3.0deg) scale(1.018) translateY(-0.9px); }
+    20% { transform: rotate(3.6deg) scale(1.024) translateY(-1.2px); }
+    25% { transform: rotate(-4.2deg) scale(1.030) translateY(-1.5px); }
+    30% { transform: rotate(4.9deg) scale(1.036) translateY(-1.8px); }
+    35% { transform: rotate(-5.5deg) scale(1.042) translateY(-2.1px); }
+    40% { transform: rotate(6.2deg) scale(1.048) translateY(-2.4px); }
+    45% { transform: rotate(-6.9deg) scale(1.054) translateY(-2.7px); }
+    50% { transform: rotate(7.5deg) scale(1.060) translateY(-3.0px); }
+    55% { transform: rotate(-8.2deg) scale(1.066) translateY(-3.3px); }
+    60% { transform: rotate(8.8deg) scale(1.072) translateY(-3.6px); }
+    65% { transform: rotate(-9.5deg) scale(1.078) translateY(-3.9px); }
+    70% { transform: rotate(10.1deg) scale(1.084) translateY(-4.2px); }
+    75% { transform: rotate(-10.8deg) scale(1.090) translateY(-4.5px); }
+    80% { transform: rotate(11.4deg) scale(1.096) translateY(-4.8px); }
+    85% { transform: rotate(-12.0deg) scale(1.102) translateY(-5.1px); }
+    90% { transform: rotate(12.7deg) scale(1.108) translateY(-5.4px); }
+    95% { transform: rotate(-13.3deg) scale(1.114) translateY(-5.7px); }
+    100% { transform: rotate(14.0deg) scale(1.120) translateY(-6.0px); }
+  }
+  .gift.open .lid { transform: translate(-70px, -290px) rotate(-200deg); opacity: 0; }
+  .gift.open .box { animation: boing var(--t-boing) ease-out; }
+  @keyframes boing { 30% { transform: scaleY(.85) scaleX(1.08); } 60% { transform: scaleY(1.05); } }
+  /* Kortet ligger ovanpå ljuset och får ett varmt sken underifrån */
+  #reveal .card { position: relative; z-index: 2; box-shadow: 0 30px 60px -28px rgba(255,214,110,.7); }
+
+
+  /* Diskret tillbaka-pil uppe till vänster */
+  .back-arrow {
+    position: fixed; top: max(14px, env(safe-area-inset-top)); left: 14px; z-index: 6;
+    width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--card); color: var(--muted); font-size: 1.4rem; line-height: 1;
+    transition: background .2s, color .2s;
+  }
+  .back-arrow:hover, .back-arrow:active { background: var(--card-hi); color: var(--text); }
+  .name .word { display: inline-block; white-space: nowrap; animation: none; }
+  .name span { display: inline-block; animation: letter var(--t-bokstavPop) cubic-bezier(.3,1.8,.5,1) both; white-space: pre; }
+  @keyframes letter { from { opacity: 0; transform: translateY(20px) scale(.3) rotate(-20deg); } to { opacity: 1; transform: none; } }
+  .name.done { animation: shine var(--t-namnGlans) ease-in-out infinite; }
+  @keyframes shine { 0%,100% { text-shadow: 0 0 6px rgba(242,193,78,.4); } 50% { text-shadow: 0 0 22px rgba(242,193,78,.95), 0 0 40px rgba(255,255,255,.4); } }
+  .card .after { opacity: 0; transition: opacity var(--t-detaljerTona); }
+  .card .after.show { opacity: 1; }
+  /* Den som bett telefonen om mindre rörelse slipper vickandet och blinkandet */
+  @media (prefers-reduced-motion: reduce) {
+    .gift.wiggle, .row #enter.ready, .name.done { animation: none; }
+  }
 </style>
 </head>
 <body>
@@ -117,17 +206,15 @@
     <div class="slots" id="slots"></div>
     <div class="pad" id="pad"></div>
     <div class="row">
-      <button id="back" type="button">⌫ Sudda</button>
-      <button id="clear" type="button">Börja om</button>
+      <button id="back" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10l-7-7z"/><path d="m12.5 9.5 5 5m0-5-5 5"/></svg>Sudda</button>
+      <button id="enter" type="button" disabled>Ange<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
     </div>
-    <p class="msg" id="msg"></p>
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
   </section>
 
   <section id="reveal">
-    <div class="gift wiggle" id="gift" role="button" aria-label="Öppna paketet">
-      <div class="box"></div>
-      <div class="lid"><span class="bow">🎀</span></div>
-    </div>
+    <button id="hide" class="back-arrow" type="button" aria-label="Tillbaka"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></button>
+    <button class="gift wiggle" id="gift" type="button" aria-label="Öppna paketet"></button>
     <p class="hint" id="hint">Tryck på paketet!</p>
     <div class="card" id="card">
       <p class="hi" id="hi"></p>
@@ -135,7 +222,6 @@
       <div class="name" id="name"></div>
       <div id="details"></div>
       <p class="secret">🤫 Håll det hemligt till julafton!</p>
-      <button id="hide" type="button">Dölj</button>
     </div>
   </section>
 </main>
@@ -143,7 +229,54 @@
 <script>
 (() => {
   "use strict";
+
+  // =====================================================================
+  //  TIDER – ändra här! Alla värden är i millisekunder (1000 = 1 sekund).
+  //  CSS-animationerna läser också härifrån (som --t-namn), så du behöver
+  //  bara ändra på ett ställe.
+  // =====================================================================
+  const T = {
+    // --- Kodinmatning ---
+    emojiPop: 150,          // hur länge en ruta "poppar" upp när man trycker en emoji
+    emojiKnapp: 80,         // knappens tryck-animation på knappsatsen
+    efterSistaEmoji: 0,     // paus efter tredje emojin innan tomten börjar leta
+    letarMinst: 0,          // "Tomten letar i listan…" visas minst så här länge
+    snurr: 1000,            // ett varv för snöflingan som snurrar medan tomten letar
+    felSkak: 450,           // hur länge rutorna skakar vid fel kod
+    felTillbaka: 450,       // väntan innan rutorna töms efter fel kod
+
+    // --- Byte till paketscenen ---
+    bytScen: 0,             // toning in av paketscenen (0 = direkt)
+    paketVickar: 1200,      // ett varv av paketets vickande medan det väntar på tryck
+
+    // --- När man trycker på paketet ---
+    skakning: 1800,         // hur länge paketet skakar innan det smäller
+    blixt: 600,             // den vita blixten när paketet öppnas
+    lockFlyger: 900,        // locket som flyger iväg
+    boing: 500,             // paketet som studsar när det öppnas
+    ljusIn: 900,            // ljuset ur paketet växer upp mot kortet
+    ljusPuls: 3000,         // ett andetag för ljusets svaga pulserande
+    konfettiVanster: 2500,  // extra konfettismäll nere till vänster (räknat från smällen)
+    konfettiHoger: 4000,    // extra konfettismäll nere till höger (räknat från smällen)
+    konfettiLivslangd: 3700,// hur länge en konfettibit lever
+    snoYra: 2700,           // hur länge det snöar extra mycket efter smällen
+    kortEfterSmall: 350,    // väntan från smällen tills kortet med namnet visas
+    kortIn: 700,            // kortet som glider in
+
+    // --- Namnet ---
+    namnStart: 500,         // väntan från att kortet syns tills första bokstaven kommer
+    perBokstav: 90,         // tid mellan varje bokstav
+    bokstavPop: 450,        // en bokstavs studs-animation
+    detaljerEfterNamn: 350, // väntan efter sista bokstaven innan budget/önskemål tonas in
+    detaljerTona: 600,      // toningen av budget/önskemål
+    namnGlans: 2200,        // ett varv av namnets glittrande sken
+  };
+  for (const [k, v] of Object.entries(T)) document.documentElement.style.setProperty("--t-" + k, v + "ms");
+  const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
   const $ = (id) => document.getElementById(id);
+  // Vad emojierna heter, för den som använder skärmläsare
+  const NAMN = { "⛄": "snögubbe", "🎅": "tomte", "🎄": "julgran", "🎁": "paket", "⭐": "stjärna", "🦌": "ren", "🍪": "kaka",
+    "🔔": "klocka", "🧦": "strumpor", "🍬": "karamell", "❄️": "snöflinga", "🧤": "vantar", "🍭": "klubba", "🧣": "halsduk", "🛷": "kälke" };
   let D = null;             // data.json
   let code = [];            // valda index i paletten
   let busy = false;
@@ -153,25 +286,36 @@
   let flakes = [], burst = 0;
   function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
   addEventListener("resize", resize); resize();
-  function addFlake(top) {
+  // Vanlig snö: en fast mängd flingor som återanvänds när de fallit ut nertill.
+  // Extra snö (vid smällen): flingor som läggs till ovanför skärmen och tas bort
+  // när de fallit ut – de tränger aldrig undan den vanliga snön.
+  const SNO_VANLIG = 90, SNO_MAX = 450;
+  function addFlake(y, extra) {
     flakes.push({
-      x: Math.random() * cv.width, y: top ? -10 : Math.random() * cv.height,
+      x: Math.random() * cv.width, y,
       r: (Math.random() * 2.5 + 1) * devicePixelRatio, s: Math.random() * .8 + .4,
-      d: Math.random() * Math.PI * 2,
+      d: Math.random() * Math.PI * 2, extra,
     });
   }
-  for (let i = 0; i < 90; i++) addFlake(false);
+  for (let i = 0; i < SNO_VANLIG; i++) addFlake(Math.random() * cv.height, false);
+  let speed = 1;
   (function tick() {
     cx.clearRect(0, 0, cv.width, cv.height);
     cx.fillStyle = "rgba(255,255,255,.85)";
+    // Mjuk övergång till/från snöyran i stället för ett hopp i fart
+    speed += ((burst ? 1.8 : 1) - speed) * .03;
     for (const f of flakes) {
-      f.y += f.s * devicePixelRatio * (burst ? 2.2 : 1); f.d += .01;
+      f.y += f.s * devicePixelRatio * speed; f.d += .01;
       f.x += Math.sin(f.d) * .5 * devicePixelRatio;
-      if (f.y > cv.height + 10) { f.y = -10; f.x = Math.random() * cv.width; }
-      cx.beginPath(); cx.arc(f.x, f.y, f.r, 0, Math.PI * 2); cx.fill();
+      if (f.y > cv.height + 10 && !f.extra) { f.y = -10; f.x = Math.random() * cv.width; }
     }
-    if (burst > 0) { for (let i = 0; i < 4; i++) addFlake(true); burst--; }
-    if (flakes.length > 400) flakes.splice(0, flakes.length - 400);
+    flakes = flakes.filter((f) => !f.extra || f.y <= cv.height + 10);
+    for (const f of flakes) { cx.beginPath(); cx.arc(f.x, f.y, f.r, 0, Math.PI * 2); cx.fill(); }
+    if (burst > 0) {
+      // Spridda starthöjder ovanför skärmen, så att yran kommer jämnt och inte som en vägg
+      for (let i = 0; i < 4 && flakes.length < SNO_MAX; i++) addFlake(-10 - Math.random() * cv.height * .4, true);
+      burst--;
+    }
     requestAnimationFrame(tick);
   })();
 
@@ -211,8 +355,18 @@
       el.className = "slot" + (code[i] !== undefined ? " filled" : "") + (pop && i === code.length - 1 ? " pop" : "");
       el.textContent = code[i] !== undefined ? D.palette[code[i]] : "";
       s.appendChild(el);
-      if (pop && i === code.length - 1) setTimeout(() => el.classList.remove("pop"), 150);
+      if (pop && i === code.length - 1) setTimeout(() => el.classList.remove("pop"), T.emojiPop);
     }
+    updateEnter();
+  }
+  // Ange-knappen går bara att trycka på när koden är komplett.
+  function updateEnter() {
+    const full = code.length === D.codeLength && !busy, b = $("enter");
+    b.disabled = !full; b.classList.toggle("ready", full);
+  }
+  function submit() {
+    if (busy || code.length !== D.codeLength) return;
+    busy = true; updateEnter(); setTimeout(check, T.efterSistaEmoji);
   }
   function msg(t, err) { const m = $("msg"); m.innerHTML = t; m.className = "msg" + (err ? " err" : ""); }
 
@@ -220,34 +374,34 @@
     if (busy || code.length >= D.codeLength) return;
     code.push(i); renderSlots(true); msg("");
     if (navigator.vibrate) navigator.vibrate(15);
-    if (code.length === D.codeLength) check();
   }
 
   async function check() {
     busy = true;
     msg('<span class="spinner">❄️</span> Tomten letar i listan…');
     try {
+      const started = Date.now();
       const [ek, mk] = await deriveKeys(code);
-      for (const e of D.entries) {
-        const r = await tryOpen(ek, mk, e);
-        if (r) { show(r); return; }
-      }
+      let found = null;
+      for (const e of D.entries) { found = await tryOpen(ek, mk, e); if (found) break; }
+      await wait(T.letarMinst - (Date.now() - started));
+      if (found) { show(found); return; }
       const s = $("slots"); s.classList.add("shake");
-      setTimeout(() => s.classList.remove("shake"), 500);
+      setTimeout(() => s.classList.remove("shake"), T.felSkak + 50);
       if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
       msg("🎅 Hmm, den koden känner inte tomten igen. Prova igen!", true);
-      code = []; setTimeout(() => renderSlots(false), 450);
+      code = []; setTimeout(() => renderSlots(false), T.felTillbaka);
     } catch (err) {
       console.error(err); msg("Något gick fel 😕 Ladda om sidan och prova igen.", true);
       code = []; renderSlots(false);
-    } finally { busy = false; }
+    } finally { busy = false; updateEnter(); }
   }
 
   function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
 
   function show(r) {
     $("entry").style.display = "none";
-    $("reveal").style.display = "block";
+    $("reveal").style.display = "flex";
     $("hi").textContent = r.fran ? `Hej ${r.fran}! 👋` : "";
     $("name").textContent = r.till;
     let h = "";
@@ -255,23 +409,329 @@
     if (r.onskemal) h += `<h3>${esc(r.till)} önskar sig / tipsar om</h3><p class="v">${esc(r.onskemal)}</p>`;
     if (r.inte_ha) h += `<h3>Helst inte</h3><p class="v">${esc(r.inte_ha)}</p>`;
     $("details").innerHTML = h;
+    resetGift();
     const g = $("gift");
     g.onclick = () => {
       if (g.classList.contains("open")) return;
-      g.classList.remove("wiggle"); g.classList.add("open");
-      $("hint").style.display = "none"; burst = 120;
-      if (navigator.vibrate) navigator.vibrate([30, 30, 80]);
-      setTimeout(() => { $("card").style.display = "block"; }, 450);
+      openGift(g, r);
     };
+    scrollTo(0, 0);
   }
 
   $("hide").onclick = () => {
-    $("card").style.display = "none"; $("reveal").style.display = "none";
-    const g = $("gift"); g.classList.remove("open"); g.classList.add("wiggle"); $("hint").style.display = "";
+    resetGift(); $("reveal").style.display = "none";
     $("entry").style.display = "block"; code = []; renderSlots(false); msg("");
   };
   $("back").onclick = () => { if (!busy) { code.pop(); renderSlots(false); msg(""); } };
-  $("clear").onclick = () => { if (!busy) { code = []; renderSlots(false); msg(""); } };
+  $("enter").onclick = submit;
+
+  // Tangentbord på datorn: Enter = Ange (eller öppna paketet), Backsteg = Sudda
+  addEventListener("keydown", (e) => {
+    if (!D) return;
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if ($("reveal").style.display === "flex") $("gift").click(); else submit();
+    } else if (e.key === "Backspace" && $("entry").style.display !== "none") {
+      e.preventDefault(); $("back").click();
+    } else if (e.key === "Escape" && $("reveal").style.display === "flex") {
+      $("hide").click();
+    }
+  });
+
+
+  // ---------- Dramatisk avslöjning ----------
+  const cf = document.createElement("canvas"); cf.id = "confetti"; document.body.appendChild(cf);
+  const fx = cf.getContext("2d"); let bits = [], running = false;
+  function sizeCf() { cf.width = innerWidth * devicePixelRatio; cf.height = innerHeight * devicePixelRatio; }
+  addEventListener("resize", sizeCf); sizeCf();
+  const COLORS = ["#f2c14e", "#c8323c", "#2f7d4f", "#ffffff", "#ff8fa3", "#7fd1ff"];
+  function boom(x, y) {
+    const k = devicePixelRatio;
+    for (let i = 0; i < 180; i++) {
+      const a = -Math.PI / 2 + (Math.random() - .5) * Math.PI * 1.3, v = (Math.random() * 14 + 6) * k;
+      bits.push({ x: x * k, y: y * k, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6.28,
+        vr: (Math.random() - .5) * .4, w: (Math.random() * 6 + 5) * k, h: (Math.random() * 4 + 3) * k,
+        c: COLORS[i % COLORS.length], star: Math.random() < .18, life: 0 });
+    }
+    if (!running) { running = true; requestAnimationFrame(frame); }
+  }
+  function star(c, r) { c.beginPath(); for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5, rr = i % 2 ? r / 2.3 : r; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } c.closePath(); c.fill(); }
+  const LIFE = Math.round(T.konfettiLivslangd / 16.7);  // i bildrutor (ca 60 per sekund)
+  function frame() {
+    fx.clearRect(0, 0, cf.width, cf.height);
+    for (const b of bits) {
+      b.vy += .32 * devicePixelRatio; b.vx *= .985; b.vy *= .985; b.x += b.vx; b.y += b.vy; b.r += b.vr; b.life++;
+      fx.save(); fx.translate(b.x, b.y); fx.rotate(b.r); fx.fillStyle = b.c;
+      fx.globalAlpha = Math.max(0, 1 - b.life / LIFE);
+      if (b.star) star(fx, b.w * 1.1); else fx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h * Math.abs(Math.cos(b.life / 6)));
+      fx.restore();
+    }
+    bits = bits.filter((b) => b.y < cf.height + 40 && b.life < LIFE);
+    if (bits.length) requestAnimationFrame(frame); else { running = false; fx.clearRect(0, 0, cf.width, cf.height); }
+  }
+  // ---------- Paketet ----------
+  // Paketet ritas med kod på tre lager som ligger ovanpå varandra:
+  //   1. lådan (med öppningen upptill)   2. ljuset   3. locket med rosetten
+  // Alla mått nedan är i en ruta på 200 × 200, där (0,0) är övre vänstra hörnet.
+  const gift = $("gift");
+  const PX = Math.min(3, devicePixelRatio || 1);
+  function layer(cls, w, h) {
+    const c = document.createElement("canvas"); c.className = cls; c.width = w * PX; c.height = h * PX;
+    const x = c.getContext("2d"); x.scale(PX, PX); gift.appendChild(c); return x;
+  }
+  const LW = 360, LH = 470, GX = (LW - 200) / 2, GY = LH - 200;   // ljusets yta, och var paketet står i den
+  const bx = layer("box", 200, 200), lx = layer("light", LW, LH), dx = layer("lid", 200, 200);
+
+  const BOX = { l: 32, r: 168, top: 96, bot: 190, backL: 45, backR: 155, backY: 75 };   // lådans framsida + öppningens bakkant
+  const LID = { l: 24, r: 176, top: 80, bot: 106, backL: 38, backR: 162, backY: 56 };   // lockets framkant + ovansidans bakkant
+  const BAND = 13;                                                                      // halva bandets bredd
+  const poly = (x, pts) => { x.beginPath(); pts.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.closePath(); };
+  function rrect(x, l, t, w, h, r1, r2) {   // rundad ruta: r1 = övre hörn, r2 = nedre hörn
+    x.beginPath(); x.moveTo(l + r1, t); x.arcTo(l + w, t, l + w, t + h, r1); x.arcTo(l + w, t + h, l, t + h, r2);
+    x.arcTo(l, t + h, l, t, r2); x.arcTo(l, t, l + w, t, r1); x.closePath();
+  }
+  function grad(x, x0, y0, x1, y1, stops) {
+    const g = x.createLinearGradient(x0, y0, x1, y1); stops.forEach(([p, c]) => g.addColorStop(p, c)); return g;
+  }
+  const RED = [[0, "#ee5a5f"], [.5, "#d43641"], [1, "#a81f2c"]];
+  const GOLD = [[0, "#ffe9a3"], [.45, "#f2c14e"], [1, "#c78b20"]];
+  // Små glittrande stjärnor på pappret
+  function paper(x, l, t, w, h) {
+    x.fillStyle = "rgba(255,255,255,.17)";
+    for (let j = 0, y = t + 9; y < t + h; y += 17, j++)
+      for (let xx = l + (j % 2 ? 19 : 8); xx < l + w; xx += 22) {
+        const r = (j + xx) % 3 ? 2.6 : 3.6;
+        x.beginPath(); x.moveTo(xx, y - r); x.quadraticCurveTo(xx, y, xx + r, y); x.quadraticCurveTo(xx, y, xx, y + r);
+        x.quadraticCurveTo(xx, y, xx - r, y); x.quadraticCurveTo(xx, y, xx, y - r); x.fill();
+      }
+  }
+  function ribbonV(x, t, h) {   // lodrätt band mitt på framsidan
+    x.fillStyle = grad(x, 100 - BAND, 0, 100 + BAND, 0, GOLD); x.fillRect(100 - BAND, t, BAND * 2, h);
+    x.fillStyle = "rgba(255,255,255,.35)"; x.fillRect(100 - BAND + 2.5, t, 1.5, h);
+    x.fillStyle = "rgba(120,70,0,.25)"; x.fillRect(100 + BAND - 3, t, 1.5, h);
+  }
+
+  function drawBox(open) {
+    const x = bx, B = BOX; x.clearRect(0, 0, 200, 200);
+    // Skugga på marken
+    x.save(); x.translate(100, B.bot - 1); x.scale(1, .12);
+    const sh = x.createRadialGradient(0, 0, 20, 0, 0, 96); sh.addColorStop(0, "rgba(0,0,0,.55)"); sh.addColorStop(1, "rgba(0,0,0,0)");
+    x.fillStyle = sh; x.beginPath(); x.arc(0, 0, 96, 0, 7); x.fill(); x.restore();
+    // Insidan som syns genom öppningen
+    poly(x, [[B.l, B.top], [B.backL, B.backY], [B.backR, B.backY], [B.r, B.top]]);
+    x.fillStyle = grad(x, 0, B.backY, 0, B.top, [[0, "#8f1d28"], [1, "#5a0d16"]]); x.fill();
+    // Framsidan
+    x.save(); rrect(x, B.l, B.top, B.r - B.l, B.bot - B.top, 2, 9); x.clip();
+    x.fillStyle = grad(x, B.l, 0, B.r, 0, RED); x.fillRect(B.l, B.top, 200, 200);
+    paper(x, B.l, B.top + 8, B.r - B.l, B.bot - B.top);
+    x.fillStyle = grad(x, 0, B.top, 0, B.bot, [[0, "rgba(0,0,0,0)"], [.6, "rgba(0,0,0,0)"], [1, "rgba(40,0,10,.35)"]]); x.fillRect(B.l, B.top, 200, 200);
+    ribbonV(x, B.top, B.bot - B.top);
+    if (open) {   // kanten lyses upp inifrån
+      x.fillStyle = grad(x, 0, B.top, 0, B.top + 34, [[0, "rgba(255,226,150,.6)"], [1, "rgba(255,226,150,0)"]]); x.fillRect(B.l, B.top, 200, 34);
+      x.fillStyle = "rgba(255,246,214,.95)"; x.fillRect(B.l, B.top, 200, 1.8);
+    } else {      // lockets skugga
+      x.fillStyle = grad(x, 0, LID.bot, 0, LID.bot + 16, [[0, "rgba(40,0,10,.5)"], [1, "rgba(40,0,10,0)"]]); x.fillRect(B.l, B.top, 200, LID.bot + 16 - B.top);
+    }
+    x.restore();
+  }
+
+  function drawLid() {
+    const x = dx, L = LID; x.clearRect(0, 0, 200, 200);
+    const at = (d) => [L.l + (L.backL - L.l) * d, L.r + (L.backR - L.r) * d, L.top + (L.backY - L.top) * d];   // d = 0 framkant, 1 bakkant
+    // Ovansidan
+    poly(x, [[L.l, L.top], [L.backL, L.backY], [L.backR, L.backY], [L.r, L.top]]);
+    x.fillStyle = grad(x, L.l, 0, L.r, 0, [[0, "#f98a87"], [.5, "#ee6468"], [1, "#d5444d"]]); x.fill();
+    // Banden i kors på ovansidan
+    const k = (L.backR - L.backL) / (L.r - L.l);
+    poly(x, [[100 - BAND, L.top], [100 - BAND * k, L.backY], [100 + BAND * k, L.backY], [100 + BAND, L.top]]);
+    x.fillStyle = grad(x, 100 - BAND, 0, 100 + BAND, 0, GOLD); x.fill();
+    const [l1, r1, y1] = at(.3), [l2, r2, y2] = at(.72);
+    poly(x, [[l1, y1], [l2, y2], [r2, y2], [r1, y1]]);
+    x.fillStyle = grad(x, L.l, 0, L.r, 0, [[0, "#ffeaa6"], [.5, "#f4c758"], [1, "#d69c2c"]]); x.fill();
+    // Framkanten
+    x.save(); rrect(x, L.l, L.top, L.r - L.l, L.bot - L.top, 3, 5); x.clip();
+    x.fillStyle = grad(x, L.l, 0, L.r, 0, [[0, "#f26267"], [.5, "#dc3d47"], [1, "#b42431"]]); x.fillRect(0, L.top, 200, 40);
+    paper(x, L.l - 3, L.top - 3, L.r - L.l, L.bot - L.top);
+    x.fillStyle = grad(x, 0, L.top, 0, L.bot, [[0, "rgba(0,0,0,0)"], [.55, "rgba(0,0,0,0)"], [1, "rgba(40,0,10,.3)"]]); x.fillRect(0, L.top, 200, 40);
+    ribbonV(x, L.top, L.bot - L.top);
+    x.fillStyle = "rgba(255,255,255,.45)"; x.fillRect(0, L.top, 200, 1.5);
+    x.restore();
+    // Rosetten: två öglor, två snibbar och en knut
+    const cx = 100, cy = 67;
+    for (const s of [-1, 1]) {
+      x.save(); x.translate(cx, cy); x.scale(s, 1);
+      // snibb
+      x.beginPath(); x.moveTo(1, 0); x.bezierCurveTo(10, 8, 19, 17, 23, 35); x.lineTo(30, 29); x.lineTo(38, 32);
+      x.bezierCurveTo(33, 17, 21, 5, 8, -3); x.closePath();
+      x.fillStyle = grad(x, 0, 0, 34, 34, [[0, "#d49a2b"], [.5, "#f2c14e"], [1, "#e0a936"]]); x.fill();
+      // ögla
+      x.beginPath(); x.moveTo(0, 0); x.bezierCurveTo(4, -24, 24, -47, 43, -39); x.bezierCurveTo(57, -32, 55, -12, 42, -6);
+      x.bezierCurveTo(28, 0, 12, 3, 0, 0); x.closePath();
+      x.fillStyle = grad(x, 8, -44, 40, 2, GOLD); x.fill();
+      x.strokeStyle = "rgba(140,90,10,.35)"; x.lineWidth = 1; x.stroke();
+      // öglans insida
+      x.beginPath(); x.moveTo(9, -5); x.bezierCurveTo(14, -18, 27, -31, 38, -28); x.bezierCurveTo(46, -25, 44, -15, 36, -11);
+      x.bezierCurveTo(27, -6, 17, -4, 9, -5); x.closePath();
+      x.fillStyle = grad(x, 12, -30, 40, -6, [[0, "#8f5e12"], [1, "#c08a24"]]); x.fill();
+      // blänk
+      x.beginPath(); x.moveTo(6, -18); x.bezierCurveTo(13, -32, 26, -41, 38, -38);
+      x.strokeStyle = "rgba(255,248,220,.55)"; x.lineWidth = 1.6; x.lineCap = "round"; x.stroke();
+      x.restore();
+    }
+    rrect(x, cx - 9, cy - 10, 18, 17, 6, 6); x.fillStyle = grad(x, cx - 9, cy - 10, cx + 9, cy + 7, GOLD); x.fill();
+    x.strokeStyle = "rgba(140,90,10,.4)"; x.lineWidth = 1; x.stroke();
+    x.fillStyle = "rgba(255,255,255,.5)"; rrect(x, cx - 5, cy - 7, 5, 4, 2, 2); x.fill();
+  }
+
+  // ---------- Ljuset ur paketet ----------
+  // En mjuk ljuskil som en färdig bild: smal nertill (bw), bred upptill (tw), tonar ut uppåt.
+  function wedge(w, h, bw, tw, soft, fade) {
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const x = c.getContext("2d"), img = x.createImageData(w, h), d = img.data;
+    for (let y = 0; y < h; y++) {
+      const v = 1 - y / (h - 1);                                  // 0 nertill, 1 upptill
+      const half = (bw + (tw - bw) * v) / 2, edge = Math.max(1, half * soft), vert = Math.pow(1 - v, fade);
+      for (let i = 0; i < w; i++) {
+        const q = Math.abs(i + .5 - w / 2);
+        let a = q < half - edge ? 1 : q > half ? 0 : (half - q) / edge;
+        a = a * a * (3 - 2 * a) * vert;
+        const k = (y * w + i) * 4;
+        d[k] = 255; d[k + 1] = 238 - 28 * v; d[k + 2] = 196 - 70 * v; d[k + 3] = a * 255;
+      }
+    }
+    x.putImageData(img, 0, 0); return c;
+  }
+  const OX = GX + 100, OY = GY + (BOX.top + BOX.backY) / 2, RAYH = OY - 8, SPREAD = 50;   // öppningens mitt, strålarnas höjd och bredd
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  let lightParts = null, lightMode = "off", lightT0 = 0, lightRaf = 0;
+  function buildLight() {
+    const rays = [];
+    for (let i = 0; i < 9; i++) {
+      const off = (i / 8 * 2 - 1) * SPREAD * .92 + rnd(-4, 4), w = rnd(14, 32), len = RAYH * rnd(.78, 1);
+      rays.push({ off, ang: Math.atan(off / 150), a: rnd(.35, .75), sp: rnd(1.8, 3.4), ph: rnd(0, 6.3),
+        img: wedge(Math.round(w * 3.2), Math.round(len), w * .5, w * 2.6, .85, 1.15) });
+    }
+    return {
+      cone: wedge(LW, Math.round(RAYH), SPREAD * 2.1, SPREAD * 2 + 200, .9, 1.35), rays,
+      motes: Array.from({ length: 16 }, () => ({ x: rnd(-SPREAD * .8, SPREAD * .8), s: rnd(1.2, 3), h: rnd(150, 310), d: rnd(3, 6), ph: Math.random() })),
+      sparks: Array.from({ length: 7 }, () => { const y = rnd(40, 270), sp = SPREAD + y * .42; return { x: rnd(-sp, sp), y, d: rnd(1.6, 3.2), ph: Math.random(), s: rnd(5, 9) }; }),
+    };
+  }
+  function glow(x, cx, cy, r, sy, stops) {   // rund (eller tillplattad) ljusfläck
+    x.save(); x.translate(cx, cy); x.scale(1, sy);
+    const g = x.createRadialGradient(0, 0, 0, 0, 0, r); stops.forEach(([p, c]) => g.addColorStop(p, c));
+    x.fillStyle = g; x.fillRect(-r, -r, r * 2, r * 2); x.restore();
+  }
+  function drawLight(now) {
+    const x = lx, P = lightParts, ms = now - lightT0, t = ms / 1000;
+    x.clearRect(0, 0, LW, LH);
+    if (lightMode === "leak") {
+      // Medan paketet skakar: ljus som börjar sippra ut i springan under locket
+      const p = Math.min(1, ms / T.skakning), a = p * p * (.8 + .2 * Math.sin(t * 34));
+      x.globalCompositeOperation = "lighter";
+      glow(x, OX, GY + LID.bot - 1, 88, .13, [[0, `rgba(255,246,214,${a})`], [.5, `rgba(255,220,130,${a * .6})`], [1, "rgba(255,200,100,0)"]]);
+      glow(x, OX, GY + LID.bot + 4, 130, .5, [[0, `rgba(255,210,120,${a * .22})`], [1, "rgba(255,200,100,0)"]]);
+    } else if (lightMode === "open") {
+      const k = Math.min(1, ms / T.ljusIn), grow = 1 - Math.pow(1 - k, 3);          // ljuset växer upp
+      const breathe = .9 + .1 * Math.sin(t * 2 * Math.PI / (T.ljusPuls / 1000));
+      const flare = Math.exp(-t * 2.2);                                             // extra starkt precis vid smällen
+      // Den lysande öppningen
+      x.globalCompositeOperation = "source-over"; x.globalAlpha = Math.min(1, k * 3);
+      x.save(); poly(x, [[GX + BOX.l + 2, GY + BOX.top], [GX + BOX.backL + 1, GY + BOX.backY + 1], [GX + BOX.backR - 1, GY + BOX.backY + 1], [GX + BOX.r - 2, GY + BOX.top]]); x.clip();
+      const hg = x.createRadialGradient(OX, OY + 4, 2, OX, OY + 4, 74);
+      hg.addColorStop(0, "#fffef6"); hg.addColorStop(.5, "#fff0b8"); hg.addColorStop(1, "#f0b545");
+      x.fillStyle = hg; x.fillRect(0, 0, LW, LH); x.restore();
+      // Allt annat ljus läggs ihop, så det blir varmt och lysande
+      x.globalCompositeOperation = "lighter"; x.globalAlpha = 1;
+      glow(x, OX, OY, 175, .55, [[0, `rgba(255,214,130,${(.5 * breathe + .4 * flare) * grow})`], [.4, `rgba(255,190,100,${.14 * grow})`], [1, "rgba(255,190,100,0)"]]);
+      const ch = RAYH * grow;
+      x.globalAlpha = .62 * breathe * k; x.drawImage(P.cone, OX - LW / 2, OY - ch, LW, ch);
+      for (const r of P.rays) {
+        x.save(); x.translate(OX + r.off, OY); x.rotate(r.ang);
+        x.globalAlpha = k * r.a * (.6 + .4 * Math.sin(t * 2 * Math.PI / r.sp + r.ph));
+        const h = r.img.height * grow; x.drawImage(r.img, -r.img.width / 2, -h, r.img.width, h); x.restore();
+      }
+      x.globalAlpha = k;
+      for (const m of P.motes) {   // guldstoft som stiger
+        const p = (t / m.d + m.ph) % 1, a = p < .15 ? p / .15 : p > .7 ? (1 - p) / .3 : 1;
+        glow(x, OX + m.x * (1 + p * .9), OY - 6 - p * m.h, m.s * 3, 1, [[0, `rgba(255,255,240,${a})`], [.3, `rgba(255,225,140,${.8 * a})`], [1, "rgba(255,210,120,0)"]]);
+      }
+      for (const s of P.sparks) {  // små tindrande stjärnor
+        const p = (t / s.d + s.ph) % 1, a = Math.sin(p * Math.PI) ** 2, sx = OX + s.x, sy = OY - s.y, L = s.s * (.4 + .6 * a);
+        x.strokeStyle = `rgba(255,250,225,${a})`; x.lineWidth = 1.2; x.lineCap = "round";
+        x.beginPath(); x.moveTo(sx - L, sy); x.lineTo(sx + L, sy); x.moveTo(sx, sy - L); x.lineTo(sx, sy + L); x.stroke();
+        glow(x, sx, sy, L * .8, 1, [[0, `rgba(255,255,255,${a})`], [1, "rgba(255,240,200,0)"]]);
+      }
+      x.globalAlpha = 1;
+    }
+    lightRaf = lightMode === "off" ? 0 : requestAnimationFrame(drawLight);
+  }
+  function setLight(mode) {
+    lightMode = mode; lightT0 = performance.now();
+    if (mode === "off") { cancelAnimationFrame(lightRaf); lightRaf = 0; lx.clearRect(0, 0, LW, LH); return; }
+    if (!lightParts) lightParts = buildLight();
+    if (!lightRaf) lightRaf = requestAnimationFrame(drawLight);
+  }
+  drawBox(false); drawLid();
+
+  // Allt som ska hända "om en stund" under avslöjningen går via later(), så att
+  // tillbaka-pilen kan avbryta det som inte hunnit hända.
+  const timers = [];
+  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  function resetGift() {
+    timers.forEach(clearTimeout); timers.length = 0;
+    gift.classList.remove("open", "rumble"); gift.classList.add("wiggle");
+    gift.style.transition = gift.style.transform = "";
+    drawBox(false); setLight("off");
+    $("card").style.display = "none"; $("hint").textContent = "Tryck på paketet!";
+  }
+  function typeName(r) {
+    const n = $("name"); n.textContent = ""; n.classList.remove("done");
+    const len = Array.from(r.till).length;
+    n.style.fontSize = len > 14 ? "1.8rem" : len > 10 ? "2.2rem" : "";
+    // Ett ord i taget får inte brytas mitt i, så bokstäverna läggs i ett omslag per ord.
+    const ch = [];
+    r.till.split(" ").forEach((w, wi) => {
+      if (wi) ch.push([n, " "]);
+      const wEl = document.createElement("span"); wEl.className = "word"; n.appendChild(wEl);
+      for (const c of Array.from(w)) ch.push([wEl, c]);
+    });
+    ch.forEach(([parent, c], i) => later(() => {
+      const s = document.createElement("span"); s.textContent = c; parent.appendChild(s);
+      if (navigator.vibrate) navigator.vibrate(8);
+      if (i === ch.length - 1) later(() => {
+        n.classList.add("done");
+        document.querySelectorAll(".card .after").forEach((e) => e.classList.add("show"));
+      }, T.detaljerEfterNamn);
+    }, T.namnStart + i * T.perBokstav));
+  }
+  function openGift(g, r) {
+    if (g.classList.contains("rumble")) return;
+    g.classList.remove("wiggle"); g.classList.add("rumble");
+    $("hint").textContent = "Oj oj oj… 😮"; setLight("leak");
+    if (navigator.vibrate) navigator.vibrate([20, 80, 30, 60, 40, 40, 60, 20, 80]);
+    later(() => {
+      g.classList.remove("rumble"); g.classList.add("open"); $("hint").textContent = "";
+      drawBox(true); setLight("open");
+      const f = document.createElement("div"); f.className = "flash"; document.body.appendChild(f); setTimeout(() => f.remove(), T.blixt + 100);
+      const b = g.getBoundingClientRect(); boom(b.left + b.width / 2, b.top + b.height / 2);
+      later(() => boom(innerWidth * .15, innerHeight * .9), T.konfettiVanster);
+      later(() => boom(innerWidth * .85, innerHeight * .9), T.konfettiHoger);
+      burst = Math.round(T.snoYra / 16.7);
+      if (navigator.vibrate) navigator.vibrate([60, 30, 120]);
+      $("details").classList.add("after"); document.querySelector(".card .secret").classList.add("after");
+      document.querySelectorAll(".card .after").forEach((e) => e.classList.remove("show"));
+      later(() => {
+        // Kortet tar plats ovanför paketet. Paketet glider mjukt ner till sin nya plats i stället för att hoppa.
+        const y0 = g.getBoundingClientRect().top;
+        $("card").style.display = "block"; scrollTo(0, 0);
+        const dy = y0 - g.getBoundingClientRect().top;
+        g.style.transition = "none"; g.style.transform = `translateY(${dy}px)`; g.getBoundingClientRect();
+        g.style.transition = `transform ${T.kortIn}ms cubic-bezier(.3,1.25,.5,1)`; g.style.transform = "";
+        typeName(r);
+      }, T.kortEfterSmall);
+    }, T.skakning);
+  }
 
   // ---------- Start ----------
   fetch("data.json", { cache: "no-store" })
@@ -282,7 +742,7 @@
       const pad = $("pad");
       D.palette.forEach((e, i) => {
         const b = document.createElement("button"); b.type = "button"; b.textContent = e;
-        b.setAttribute("aria-label", "Emoji " + (i + 1));
+        b.setAttribute("aria-label", NAMN[e] || e);
         b.onclick = () => press(i); pad.appendChild(b);
       });
       renderSlots(false);
