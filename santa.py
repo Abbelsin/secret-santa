@@ -328,7 +328,7 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
     namn, url = giver["namn"], cfg["sida_url"]
     kod = kod or code_str(idx)
     intro = ("Lottningen är gjord! 🎄 För att Albin inte ska råka se vem du har fått, får du en "
-             "hemlig kod. Knappa in den på julsidan så ser du vem du ska ge en klapp till.")
+             "hemlig kod. Knappa in den på hemsidan så ser du vem du ska ge en klapp till.")
     slut = f"{budget_line(cfg, budget)} {cfg.get('extra_text', 'Ta med klappen till julafton!')}"
 
     text = "\n".join([
@@ -340,7 +340,7 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
         "",
         f"        {kod}",
         "",
-        f"Till julsidan: {url}",
+        f"Till hemsidan: {url}",
         "",
         slut,
         "",
@@ -366,7 +366,7 @@ Hej {e(namn)}!<br><br>
 {e(intro)}<br><br>
 Din hemliga kod:<br>
 <div style="font-size:44px;line-height:1.2;letter-spacing:8px;margin:10px 0 18px;">{e(kod)}</div>
-<a href="{e(url, quote=True)}" style="display:inline-block;background:#2f7d4f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:12px 22px;border-radius:8px;">Till julsidan 🎁</a><br>
+<a href="{e(url, quote=True)}" style="display:inline-block;background:#2f7d4f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:12px 22px;border-radius:8px;">Till hemsidan 🎁</a><br>
 <span style="color:#777;font-size:13px;">Adressen är <a href="{e(url, quote=True)}" style="color:#777;">{e(url)}</a></span><br><br>
 {e(slut)}<br><br>
 Håll det hemligt! 🤫<br><br>
