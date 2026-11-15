@@ -95,7 +95,7 @@
      Canvas påverkas inte av webbläsarens tvingade mörka läge, så färgerna blir alltid rätt. */
   .gift {
     position: relative; display: block; width: 200px; height: 200px; margin: 30px auto 10px;
-    padding: 0; border: 0; background: none; cursor: pointer; border-radius: 16px;
+    padding: 0; border: 0; background: none; cursor: pointer; border-radius: 4px;
   }
   .gift canvas { position: absolute; pointer-events: none; }
   .gift .box, .gift .lid { left: 0; top: 0; width: 200px; height: 200px; }
@@ -144,7 +144,7 @@
 
   #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
   .flash { position: fixed; inset: 0; background: white; z-index: 4; pointer-events: none; animation: flash var(--t-blixt) ease-out forwards; }
-  @keyframes flash { from { opacity: .85; } to { opacity: 0; } }
+  @keyframes flash { from { opacity: .50; } to { opacity: 0; } }
   .gift.rumble { animation: rumble var(--t-skakning) ease-in both; }
   @keyframes rumble {
     0% { transform: rotate(1.0deg) scale(1.000) translateY(0.0px); }
@@ -176,7 +176,7 @@
   .gift.open .box, .gift.open .light { animation: boing var(--t-boing) ease-out; }
   @keyframes boing { 30% { transform: scaleY(.85) scaleX(1.08); } 60% { transform: scaleY(1.05); } }
   /* Kortet ligger ovanpå ljuset och får ett varmt sken underifrån */
-  #reveal .card { position: relative; z-index: 2; box-shadow: 0 30px 60px -28px rgba(255,214,110,.7); }
+  #reveal .card { position: relative; z-index: 2; }
 
 
   /* Diskret tillbaka-pil uppe till vänster */
@@ -191,7 +191,7 @@
   .name span { display: inline-block; animation: letter var(--t-bokstavPop) cubic-bezier(.3,1.8,.5,1) both; white-space: pre; }
   @keyframes letter { from { opacity: 0; transform: translateY(20px) scale(.3) rotate(-20deg); } to { opacity: 1; transform: none; } }
   .name.done { animation: shine var(--t-namnGlans) ease-in-out infinite; }
-  @keyframes shine { 0%,100% { text-shadow: 0 0 6px rgba(242,193,78,.4); } 50% { text-shadow: 0 0 22px rgba(242,193,78,.95), 0 0 40px rgba(255,255,255,.4); } }
+  @keyframes shine { 0%,30% { text-shadow: 0 0 6px rgba(242,193,78,.4); } 50% { text-shadow: 0 0 22px rgba(242,193,78,.95), 0 0 40px rgba(255,255,255,.4); } }
   .card .after { opacity: 0; transition: opacity var(--t-detaljerTona); }
   .card .after.show { opacity: 1; }
   /* Den som bett telefonen om mindre rörelse slipper vickandet och blinkandet */
@@ -259,10 +259,10 @@
     boing: 500,             // paketet som studsar när det öppnas
     ljusIn: 900,            // ljuset ur paketet växer upp mot kortet
     ljusPuls: 5000,         // ett andetag för ljusets svaga pulserande
-    konfettiVanster: 2500,  // extra konfettismäll nere till vänster (räknat från smällen)
-    konfettiHoger: 4000,    // extra konfettismäll nere till höger (räknat från smällen)
+    konfettiVanster: 250,  // extra konfettismäll nere till vänster (räknat från smällen)
+    konfettiHoger: 400,    // extra konfettismäll nere till höger (räknat från smällen)
     konfettiLivslangd: 3700,// hur länge en konfettibit lever
-    snoYra: 2700,           // hur länge det snöar extra mycket efter smällen
+    snoYra: 2700,           // hur länge det snöar extra mycket efter smällenz
     kortEfterSmall: 350,    // väntan från smällen tills kortet med namnet visas
     kortIn: 700,            // kortet som glider in
 
@@ -524,7 +524,7 @@
     poly(x, [[B.l, B.top], [B.backL, B.backY], [B.backR, B.backY], [B.r, B.top]]);
     x.fillStyle = grad(x, 0, B.backY, 0, B.top, [[0, "#8f1d28"], [1, "#5a0d16"]]); x.fill();
     // Framsidan
-    x.save(); rrect(x, B.l, B.top, B.r - B.l, B.bot - B.top, 2, 9); x.clip();
+    x.save(); rrect(x, B.l, B.top, B.r - B.l, B.bot - B.top, 2, 2); x.clip();
     x.fillStyle = grad(x, B.l, 0, B.r, 0, RED); x.fillRect(B.l, B.top, 200, 200);
     paper(x, B.l, B.top + 8, B.r - B.l, B.bot - B.top);
     x.fillStyle = grad(x, 0, B.top, 0, B.bot, [[0, "rgba(0,0,0,0)"], [.6, "rgba(0,0,0,0)"], [1, "rgba(40,0,10,.35)"]]); x.fillRect(B.l, B.top, 200, 200);
@@ -552,7 +552,7 @@
     poly(x, [[l1, y1], [l2, y2], [r2, y2], [r1, y1]]);
     x.fillStyle = grad(x, L.l, 0, L.r, 0, [[0, "#ffeaa6"], [.5, "#f4c758"], [1, "#d69c2c"]]); x.fill();
     // Framkanten
-    x.save(); rrect(x, L.l, L.top, L.r - L.l, L.bot - L.top, 3, 5); x.clip();
+    x.save(); rrect(x, L.l, L.top, L.r - L.l, L.bot - L.top, 0, 2); x.clip();
     x.fillStyle = grad(x, L.l, 0, L.r, 0, [[0, "#f26267"], [.5, "#dc3d47"], [1, "#b42431"]]); x.fillRect(0, L.top, 200, 40);
     paper(x, L.l - 3, L.top - 3, L.r - L.l, L.bot - L.top);
     x.fillStyle = grad(x, 0, L.top, 0, L.bot, [[0, "rgba(0,0,0,0)"], [.55, "rgba(0,0,0,0)"], [1, "rgba(40,0,10,.3)"]]); x.fillRect(0, L.top, 200, 40);

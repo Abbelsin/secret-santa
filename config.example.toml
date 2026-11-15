@@ -7,15 +7,17 @@ gmail = "familjens.tomte@gmail.com"
 # din adress där, och lösenordet är kontots vanliga). Port 465 (SSL) eller 587 (STARTTLS).
 # smtp_server = "mail.gmx.com"
 # smtp_port = 587
+# Namnet som visas som avsändare. Ta bort raden för att visa kontots eget namn i stället
+# (ett annat namn än kontots kan göra skräppostfilter misstänksamma).
 avsandarnamn = "Tomten"
-amne = "🎅 Din Secret Santa-kod!"
+amne = "Secret Santa 2026 – lottningen är klar"   # undvik emoji och ord som "kod" här, det triggar skräppostfilter
 
 # Adressen till sidan på GitHub Pages
 sida_url = "https://abbelsin.github.io/secret-santa/"
 
 # CSV från Google Forms (Arkiv → Ladda ned → CSV), relativt mappen santa.py ligger i.
 # Committas aldrig (se .gitignore).
-csv_fil = "svar.csv"
+csv_fil = "svar.csv"   # eller "svar.tsv" (tab-separerad), skriptet hittar avgränsaren själv
 
 # Par som inte får dra varandra (namnen exakt som de skrivit i formuläret, skiftläge spelar ingen roll)
 far_inte_dra_varandra = [
@@ -31,6 +33,11 @@ undvik_att_dra_varandra = false
 # budget = 300
 
 extra_text = "Ta med klappen till julafton!"
+
+# false = ingen länk i mejlet, bara koden. Mejl utan länk fastnar mer sällan i skräpposten.
+# Skicka då länken själv, t.ex. i familjechatten. Texten nedan står i mejlet i stället för länken.
+lank_i_mejl = true
+utan_lank_text = "Länken till hemsidan kommer i familjechatten."
 
 # Radera mejlen ur Skickat + papperskorgen automatiskt efter utskick
 rensa_skickat = true

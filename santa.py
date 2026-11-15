@@ -22,6 +22,7 @@ import getpass
 import hashlib
 import hmac
 import html
+import io
 import imaplib
 import json
 import os
@@ -31,11 +32,12 @@ import secrets
 import smtplib
 import statistics
 import sys
+import time
 import tomllib
 import urllib.request
 import uuid
 from email.message import EmailMessage
-from email.utils import make_msgid
+from email.utils import formataddr, formatdate, make_msgid
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -79,9 +81,19 @@ def load_participants(cfg):
     if not csv_path.exists():
         sys.exit(f"Hittar inte CSV-filen: {csv_path}")
     with open(csv_path, newline="", encoding="utf-8-sig") as f:
-        rows = list(csv.DictReader(f))
+        text = f.read()
+    # Svenska Excel/Sheets sparar ofta med semikolon eller tab i stället för komma.
+    # Välj det tecken som förekommer flest gånger på rubrikraden.
+    first_line = text.splitlines()[0] if text.strip() else ""
+    delim = max(",;\t", key=first_line.count)
+    rows = list(csv.DictReader(io.StringIO(text), delimiter=delim))
     if not rows:
         sys.exit("CSV-filen är tom.")
+    bad = [i for i, r in enumerate(rows, start=2) if None in r or None in r.values()]
+    if bad:
+        sys.exit(f"CSV-raderna {', '.join(map(str, bad[:5]))} har fler eller färre kolumner än rubrikraden. "
+                 f"Oftast beror det på ett extra komma eller citattecken i filen. "
+                 f"Ladda ned CSV:n från Google Forms igen och redigera inte filen för hand.")
 
     headers = list(rows[0].keys())
     col = cfg.get("kolumner", {})
@@ -304,16 +316,24 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
     """Enkelt mail som ser ut som vanlig text, men med stor kod och en knapp.
     Textversionen skickas med som reserv för mailprogram som inte visar HTML."""
     msg = EmailMessage()
-    msg["From"] = f"{cfg.get('avsandarnamn', 'Tomten')} <{cfg['gmail']}>"
+    # Utan avsandarnamn i config visas kontots eget namn (minst risk för skräppost)
+    namn_fran = cfg.get("avsandarnamn", "").strip()
+    msg["From"] = formataddr((namn_fran, cfg["gmail"])) if namn_fran else cfg["gmail"]
     msg["To"] = giver["epost"]
-    msg["Subject"] = cfg.get("amne", "🎅 Din Secret Santa-kod!")
-    msg["Message-ID"] = make_msgid(idstring=run_id, domain="santa.local")
+    msg["Subject"] = cfg.get("amne", "Secret Santa 2026 – lottningen är klar")
+    msg["Date"] = formatdate(localtime=True)
+    # Riktig domän i Message-ID (avsändarens), påhittade domäner drar till sig skräppostfilter
+    msg["Message-ID"] = make_msgid(idstring=run_id, domain=cfg["gmail"].rsplit("@", 1)[-1])
 
     namn, url = giver["namn"], cfg["sida_url"]
     kod = kod or code_str(idx)
     intro = ("Lottningen är gjord! 🎄 För att Albin inte ska råka se vem du har fått, får du en "
-             "hemlig kod. Knappa in den på julsidan så ser du vem du ska ge en klapp till.")
+             "hemlig kod. Knappa in den på hemsidan så ser du vem du ska ge en klapp till.")
     slut = f"{budget_line(cfg, budget)} {cfg.get('extra_text', 'Ta med klappen till julafton!')}"
+    # lank_i_mejl = false: ingen länk alls i mejlet (mejl utan länk fastnar mer sällan i skräpposten).
+    # Länken skickas då på annat sätt, t.ex. i familjechatten.
+    med_lank = cfg.get("lank_i_mejl", True)
+    utan_lank_text = cfg.get("utan_lank_text", "Länken till hemsidan kommer i familjechatten.")
 
     text = "\n".join([
         f"Hej {namn}!",
@@ -324,7 +344,7 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
         "",
         f"        {kod}",
         "",
-        f"Till julsidan: {url}",
+        f"Till hemsidan: {url}" if med_lank else utan_lank_text,
         "",
         slut,
         "",
@@ -340,6 +360,15 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
 
     e = html.escape
     font = "font-family:Arial,Helvetica,sans-serif;"
+    if med_lank:
+        lank_html = (
+            f'<a href="{e(url, quote=True)}" style="display:inline-block;background:#2f7d4f;color:#ffffff;'
+            f'text-decoration:none;font-weight:bold;font-size:16px;padding:12px 22px;border-radius:8px;">'
+            f'Till hemsidan 🎁</a><br>\n'
+            f'<span style="color:#777;font-size:13px;">Adressen är '
+            f'<a href="{e(url, quote=True)}" style="color:#777;">{e(url)}</a></span>')
+    else:
+        lank_html = e(utan_lank_text)
     msg.add_alternative(f"""\
 <!doctype html>
 <html lang="sv"><head><meta charset="utf-8">
@@ -350,7 +379,7 @@ Hej {e(namn)}!<br><br>
 {e(intro)}<br><br>
 Din hemliga kod:<br>
 <div style="font-size:44px;line-height:1.2;letter-spacing:8px;margin:10px 0 18px;">{e(kod)}</div>
-<a href="{e(url, quote=True)}" style="display:inline-block;background:#2f7d4f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:12px 22px;border-radius:8px;">Till julsidan 🎁</a><br><br>
+{lank_html}<br><br>
 {e(slut)}<br><br>
 Håll det hemligt! 🤫<br><br>
 Vänliga hälsningar<br>
@@ -386,6 +415,23 @@ def find_special_folder(imap, flag):
         if flag in line:
             return line.split(' "/" ')[-1].strip()
     return None
+
+
+def save_drafts(cfg, msgs):
+    """Lägg mejlen i Gmails utkastmapp i stället för att skicka dem (du klickar Skicka själv)."""
+    if not is_gmail(cfg):
+        sys.exit("Utkast finns bara för Gmail.")
+    imap = imaplib.IMAP4_SSL("imap.gmail.com")
+    imap.login(cfg["gmail"], password(cfg))
+    drafts = find_special_folder(imap, "\\Drafts")
+    if not drafts:
+        sys.exit("Hittade inte utkastmappen via IMAP.")
+    for m in msgs:
+        del m["Message-ID"], m["Date"]     # Gmail sätter egna när du skickar
+        typ, data = imap.append(drafts, "(\\Draft)", imaplib.Time2Internaldate(time.time()), m.as_bytes(policy=m.policy.clone(linesep="\r\n")))
+        if typ != "OK":
+            sys.exit(f"Kunde inte spara utkastet: {data}")
+    imap.logout()
 
 
 def scrub_sent(cfg, pw, msgs):
@@ -451,12 +497,16 @@ def cmd_kolla(cfg):
     print("✅ En giltig lottning är möjlig. Kör 'lotta' när alla har svarat.")
 
 
-def cmd_testmejl(cfg, address):
+def cmd_testmejl(cfg, address, draft=False):
     # Ett exempel på det riktiga mailet, med påhittat namn och en kod som aldrig kan vara giltig
     # (❓ finns inte i paletten), så testet aldrig avslöjar någons lottning.
     msg = build_mail(cfg, {"namn": "Testperson", "epost": address}, None,
                      uuid.uuid4().hex[:8], cfg.get("budget", 300), kod="❓❓❓")
-    msg.replace_header("Subject", "[TEST] " + msg["Subject"])
+    msg.replace_header("Subject", "Test: " + msg["Subject"])
+    if draft:
+        save_drafts(cfg, [msg])
+        print(f"✅ Testmejlet ligger i Utkast i Gmail, adresserat till {address}. Öppna det och klicka Skicka.")
+        return
     send_all(cfg, [msg])
     print(f"✅ Testmejl skickat till {address}. Det visar hur mailet ser ut, med en påhittad kod.")
 
@@ -522,7 +572,7 @@ def main():
     ap = argparse.ArgumentParser(description="Secret Santa")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("kolla")
-    t = sub.add_parser("testmejl"); t.add_argument("adress")
+    t = sub.add_parser("testmejl"); t.add_argument("adress"); t.add_argument("--utkast", action="store_true")
     l = sub.add_parser("lotta"); l.add_argument("--ny", action="store_true")
     s = sub.add_parser("skicka"); s.add_argument("--tvinga", action="store_true")
     r = sub.add_parser("skicka-igen"); r.add_argument("namn")
@@ -532,7 +582,7 @@ def main():
     if args.cmd == "kolla":
         cmd_kolla(cfg)
     elif args.cmd == "testmejl":
-        cmd_testmejl(cfg, args.adress)
+        cmd_testmejl(cfg, args.adress, args.utkast)
     elif args.cmd == "lotta":
         cmd_lotta(cfg, args.ny)
     elif args.cmd == "skicka":
