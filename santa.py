@@ -275,9 +275,15 @@ def build_site_data(pairs_with_codes, budget, names):
 
 # ---------------------------------------------------------------- mejl
 
-def password():
-    pw = os.environ.get("SANTA_APP_PASSWORD") or getpass.getpass("Gmail app-lösenord: ")
-    return pw.replace(" ", "")
+def is_gmail(cfg):
+    return "smtp_server" not in cfg or cfg["smtp_server"].lower().endswith("gmail.com")
+
+
+def password(cfg):
+    if is_gmail(cfg):   # app-lösenord visas med mellanslag, som ska bort
+        pw = os.environ.get("SANTA_APP_PASSWORD") or getpass.getpass("Gmail app-lösenord: ")
+        return pw.replace(" ", "")
+    return os.environ.get("SANTA_APP_PASSWORD") or getpass.getpass("Lösenord till mejlkontot: ")
 
 
 SIGNATUR_TITEL = "Head of Gift Allocation, Secret Santa 2026"
@@ -358,8 +364,15 @@ Vänliga hälsningar<br>
 
 
 def send_all(cfg, msgs):
-    pw = password()
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+    pw = password(cfg)
+    server = cfg.get("smtp_server", "smtp.gmail.com")
+    port = int(cfg.get("smtp_port", 465))
+    if port == 587:     # STARTTLS
+        s = smtplib.SMTP(server, port)
+        s.starttls()
+    else:               # SSL direkt (465)
+        s = smtplib.SMTP_SSL(server, port)
+    with s:
         s.login(cfg["gmail"], pw)
         for m in msgs:
             s.send_message(m)
@@ -377,6 +390,10 @@ def find_special_folder(imap, flag):
 
 def scrub_sent(cfg, pw, msgs):
     """Flytta de skickade mejlen till papperskorgen och töm dem därifrån (Gmail-specifikt)."""
+    if not is_gmail(cfg):
+        print("ℹ️  Rensningen av Skickat finns bara för Gmail. Sparar din mejltjänst skickade mejl:\n"
+              "   titta INTE i Skickat – markera allt där och radera, töm sedan papperskorgen.")
+        return
     try:
         imap = imaplib.IMAP4_SSL("imap.gmail.com")
         imap.login(cfg["gmail"], pw)
