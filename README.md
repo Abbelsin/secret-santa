@@ -15,7 +15,7 @@ budgetröster publiceras aldrig.
 ## Gör så här
 
 1. **Formulär:** klistra in `skapa_formular.gs` på <https://script.google.com>, kör, dela länken.
-2. **Svar:** ladda ner svaren som CSV, spara som `svar.csv` här.
+2. **Svar:** ladda ner svaren som CSV (eller TSV, tab-separerad, om du vill slippa komma), spara som `svar.csv` / `svar.tsv` här.
 3. **Config:** `cp config.example.toml config.toml` och fyll i Gmail och vilka som inte får dra varandra.
 4. **Kolla:** `python3 santa.py kolla`
 5. **Testa mejl:** `python3 santa.py testmejl din@adress.se`

@@ -15,7 +15,7 @@ sida_url = "https://abbelsin.github.io/secret-santa/"
 
 # CSV från Google Forms (Arkiv → Ladda ned → CSV), relativt mappen santa.py ligger i.
 # Committas aldrig (se .gitignore).
-csv_fil = "svar.csv"
+csv_fil = "svar.csv"   # eller "svar.tsv" (tab-separerad), skriptet hittar avgränsaren själv
 
 # Par som inte får dra varandra (namnen exakt som de skrivit i formuläret, skiftläge spelar ingen roll)
 far_inte_dra_varandra = [
