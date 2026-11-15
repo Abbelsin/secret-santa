@@ -170,7 +170,10 @@
     100% { transform: rotate(14.0deg) scale(1.120) translateY(-6.0px); }
   }
   .gift.open .lid { transform: translate(-70px, -290px) rotate(-200deg); opacity: 0; }
-  .gift.open .box { animation: boing var(--t-boing) ease-out; }
+  /* Öppningen ritas på ljus-lagret, så det måste studsa exakt som lådan (samma fästpunkt:
+     95 % ner på paketet = 460 av ljus-lagrets 470 px) – annars glider öppningen isär från lådan. */
+  .gift .light { transform-origin: 50% 460px; }
+  .gift.open .box, .gift.open .light { animation: boing var(--t-boing) ease-out; }
   @keyframes boing { 30% { transform: scaleY(.85) scaleX(1.08); } 60% { transform: scaleY(1.05); } }
   /* Kortet ligger ovanpå ljuset och får ett varmt sken underifrån */
   #reveal .card { position: relative; z-index: 2; box-shadow: 0 30px 60px -28px rgba(255,214,110,.7); }
@@ -609,12 +612,12 @@
     // Lugnt ljus: få, breda och svaga strålar som bara andas långsamt
     for (let i = 0; i < 6; i++) {
       const off = (i / 5 * 2 - 1) * SPREAD * .9 + rnd(-4, 4), w = rnd(22, 38), len = RAYH * rnd(.8, 1);
-      rays.push({ off, ang: Math.atan(off / 150), a: rnd(.22, .42), sp: rnd(6, 10), ph: rnd(0, 6.3),
+      rays.push({ off, ang: Math.atan(off / 150), a: rnd(.16, .32), sp: rnd(6, 10), ph: rnd(0, 6.3),
         img: wedge(Math.round(w * 3.2), Math.round(len), w * .5, w * 2.6, .85, 1.15) });
     }
     return {
       cone: wedge(LW, Math.round(RAYH), SPREAD * 2.1, SPREAD * 2 + 200, .9, 1.35), rays,
-      motes: Array.from({ length: 5 }, () => ({ x: rnd(-SPREAD * .7, SPREAD * .7), s: rnd(1, 2), h: rnd(150, 280), d: rnd(7, 11), ph: Math.random() })),
+      motes: Array.from({ length: 4 }, () => ({ x: rnd(-SPREAD * .7, SPREAD * .7), s: rnd(1, 2), h: rnd(150, 280), d: rnd(7, 11), ph: Math.random() })),
       sparks: Array.from({ length: 0 }, () => { const y = rnd(40, 270), sp = SPREAD + y * .42; return { x: rnd(-sp, sp), y, d: rnd(1.6, 3.2), ph: Math.random(), s: rnd(5, 9) }; }),
     };
   }
@@ -644,9 +647,9 @@
       x.fillStyle = hg; x.fillRect(0, 0, LW, LH); x.restore();
       // Allt annat ljus läggs ihop, så det blir varmt och lysande
       x.globalCompositeOperation = "lighter"; x.globalAlpha = 1;
-      glow(x, OX, OY, 175, .55, [[0, `rgba(255,214,130,${(.5 * breathe + .4 * flare) * grow})`], [.4, `rgba(255,190,100,${.14 * grow})`], [1, "rgba(255,190,100,0)"]]);
+      glow(x, OX, OY, 175, .55, [[0, `rgba(255,214,130,${(.4 * breathe + .4 * flare) * grow})`], [.4, `rgba(255,190,100,${.14 * grow})`], [1, "rgba(255,190,100,0)"]]);
       const ch = RAYH * grow;
-      x.globalAlpha = .55 * breathe * k; x.drawImage(P.cone, OX - LW / 2, OY - ch, LW, ch);
+      x.globalAlpha = .45 * breathe * k; x.drawImage(P.cone, OX - LW / 2, OY - ch, LW, ch);
       for (const r of P.rays) {
         x.save(); x.translate(OX + r.off, OY); x.rotate(r.ang);
         x.globalAlpha = k * r.a * (.85 + .15 * Math.sin(t * 2 * Math.PI / r.sp + r.ph));
@@ -655,7 +658,7 @@
       x.globalAlpha = k;
       for (const m of P.motes) {   // guldstoft som stiger
         const p = (t / m.d + m.ph) % 1, a = p < .15 ? p / .15 : p > .7 ? (1 - p) / .3 : 1;
-        glow(x, OX + m.x * (1 + p * .9), OY - 6 - p * m.h, m.s * 3, 1, [[0, `rgba(255,255,240,${.6 * a})`], [.3, `rgba(255,225,140,${.45 * a})`], [1, "rgba(255,210,120,0)"]]);
+        glow(x, OX + m.x * (1 + p * .9), OY - 6 - p * m.h, m.s * 3, 1, [[0, `rgba(255,255,240,${.5 * a})`], [.3, `rgba(255,225,140,${.35 * a})`], [1, "rgba(255,210,120,0)"]]);
       }
       for (const s of P.sparks) {  // små tindrande stjärnor
         const p = (t / s.d + s.ph) % 1, a = Math.sin(p * Math.PI) ** 2, sx = OX + s.x, sy = OY - s.y, L = s.s * (.4 + .6 * a);
