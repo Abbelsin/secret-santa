@@ -31,11 +31,11 @@
     width: 74px; height: 74px; border-radius: 18px;
     background: var(--card); border: 2px dashed rgba(255,255,255,.25);
     display: grid; place-items: center; font-size: 2.6rem;
-    transition: transform .15s, border-color .2s, background .2s;
+    transition: transform var(--t-emojiPop), border-color .2s, background .2s;
   }
   .slot.filled { border-style: solid; border-color: var(--gold); background: rgba(242,193,78,.12); }
   .slot.pop { transform: scale(1.12); }
-  .shake { animation: shake .45s; }
+  .shake { animation: shake var(--t-felSkak); }
   @keyframes shake {
     0%,100% { transform: translateX(0); } 20% { transform: translateX(-10px); }
     40% { transform: translateX(10px); } 60% { transform: translateX(-7px); } 80% { transform: translateX(7px); }
@@ -44,22 +44,32 @@
   .pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
   .pad button {
     aspect-ratio: 1; border: 0; border-radius: 16px; background: var(--card);
-    font-size: 2rem; cursor: pointer; transition: transform .08s, background .15s;
+    font-size: 2rem; cursor: pointer; transition: transform var(--t-emojiKnapp), background .15s;
     color: var(--text);
   }
   .pad button:active { transform: scale(.9); background: rgba(255,255,255,.18); }
   .row { display: flex; gap: 10px; margin-top: 12px; }
   .row button {
     flex: 1; padding: 14px; border: 0; border-radius: 14px; font-size: 1rem; font-weight: 600;
-    background: var(--card); color: var(--text); cursor: pointer;
+    background: var(--green); color: var(--text); cursor: pointer;
+  }
+  /* Ange-knappen: grå tills alla emojis är inknappade, sen grön och pulserande */
+  .row #enter { flex: 1.4; background: var(--green); color: white; transition: opacity .2s, transform .1s; }
+  .row #enter:disabled { opacity: .35; cursor: default; }
+  .row #enter.ready { animation: ready 1.4s ease-in-out infinite; }
+  .row #enter:not(:disabled):active { transform: scale(.95); }
+  @keyframes ready {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(47,125,79,.7); }
+    50% { box-shadow: 0 0 0 8px rgba(47,125,79,0); }
   }
   .msg { min-height: 1.5em; margin: 16px 0 0; color: var(--muted); font-size: 1rem; }
   .msg.err { color: #ff9a9a; }
-  .spinner { display: inline-block; animation: spin 1s linear infinite; }
+  .spinner { display: inline-block; animation: spin var(--t-snurr) linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ---- Reveal ---- */
-  #reveal { display: none; }
+  #reveal { display: none; animation: fadeIn var(--t-bytScen) ease-out both; }
+  @keyframes fadeIn { from { opacity: 0; } }
   .gift { position: relative; width: 160px; height: 160px; margin: 30px auto 10px; cursor: pointer; }
   .gift .box {
     position: absolute; bottom: 0; left: 10px; width: 140px; height: 110px;
@@ -73,12 +83,12 @@
   .gift .lid {
     position: absolute; top: 28px; left: 0; width: 160px; height: 36px;
     background: #d9434d; border-radius: 8px; transform-origin: 20% 100%;
-    transition: transform .8s cubic-bezier(.3,1.6,.5,1), opacity .8s;
+    transition: transform var(--t-lockFlyger) cubic-bezier(.3,1.6,.5,1), opacity var(--t-lockFlyger);
   }
   .gift .bow {
     position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 2.4rem;
   }
-  .gift.wiggle { animation: wiggle 1.2s ease-in-out infinite; }
+  .gift.wiggle { animation: wiggle var(--t-paketVickar) ease-in-out infinite; }
   @keyframes wiggle {
     0%,100% { transform: rotate(0); } 10% { transform: rotate(-6deg); } 20% { transform: rotate(6deg); }
     30% { transform: rotate(-4deg); } 40% { transform: rotate(0); }
@@ -90,7 +100,7 @@
     display: none; margin-top: 10px; padding: 24px 20px; border-radius: 22px;
     background: rgba(255,255,255,.1); backdrop-filter: blur(6px);
     border: 1px solid rgba(255,255,255,.15); text-align: left;
-    animation: rise .7s ease-out both;
+    animation: rise var(--t-kortIn) ease-out both;
   }
   @keyframes rise { from { opacity: 0; transform: translateY(30px) scale(.95); } to { opacity: 1; transform: none; } }
   .card .hi { color: var(--muted); margin: 0 0 6px; }
@@ -106,6 +116,87 @@
     display: block; width: 100%; margin-top: 16px; padding: 14px; border: 0; border-radius: 14px;
     background: var(--green); color: white; font-size: 1rem; font-weight: 600; cursor: pointer;
   }
+
+  /* ---- Dramatisk avslöjning ---- */
+  /* Paketet mitt på skärmen, kortet dyker upp ovanför */
+  #reveal { flex-direction: column; justify-content: center; min-height: calc(100vh - 120px); min-height: calc(100dvh - 120px); }
+  #reveal .gift { order: 2; margin: 50px auto 10px; }
+  #reveal .hint { order: 3; }
+  .gift.open .lid { pointer-events: none; }
+  #reveal .card { order: 1; margin: 0 0 10px; animation-name: drop; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-30px) scale(.95); } to { opacity: 1; transform: none; } }
+
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .flash { position: fixed; inset: 0; background: white; z-index: 4; pointer-events: none; animation: flash var(--t-blixt) ease-out forwards; }
+  @keyframes flash { from { opacity: .85; } to { opacity: 0; } }
+  .gift.rumble { animation: rumble var(--t-skakning) ease-in both; }
+  @keyframes rumble {
+    0% { transform: rotate(1.0deg) scale(1.000) translateY(0.0px); }
+    5% { transform: rotate(-1.6deg) scale(1.006) translateY(-0.3px); }
+    10% { transform: rotate(2.3deg) scale(1.012) translateY(-0.6px); }
+    15% { transform: rotate(-3.0deg) scale(1.018) translateY(-0.9px); }
+    20% { transform: rotate(3.6deg) scale(1.024) translateY(-1.2px); }
+    25% { transform: rotate(-4.2deg) scale(1.030) translateY(-1.5px); }
+    30% { transform: rotate(4.9deg) scale(1.036) translateY(-1.8px); }
+    35% { transform: rotate(-5.5deg) scale(1.042) translateY(-2.1px); }
+    40% { transform: rotate(6.2deg) scale(1.048) translateY(-2.4px); }
+    45% { transform: rotate(-6.9deg) scale(1.054) translateY(-2.7px); }
+    50% { transform: rotate(7.5deg) scale(1.060) translateY(-3.0px); }
+    55% { transform: rotate(-8.2deg) scale(1.066) translateY(-3.3px); }
+    60% { transform: rotate(8.8deg) scale(1.072) translateY(-3.6px); }
+    65% { transform: rotate(-9.5deg) scale(1.078) translateY(-3.9px); }
+    70% { transform: rotate(10.1deg) scale(1.084) translateY(-4.2px); }
+    75% { transform: rotate(-10.8deg) scale(1.090) translateY(-4.5px); }
+    80% { transform: rotate(11.4deg) scale(1.096) translateY(-4.8px); }
+    85% { transform: rotate(-12.0deg) scale(1.102) translateY(-5.1px); }
+    90% { transform: rotate(12.7deg) scale(1.108) translateY(-5.4px); }
+    95% { transform: rotate(-13.3deg) scale(1.114) translateY(-5.7px); }
+    100% { transform: rotate(14.0deg) scale(1.120) translateY(-6.0px); }
+  }
+  .gift.open .lid { transform: translate(-60px, -260px) rotate(-200deg); opacity: 0; transition: transform var(--t-lockFlyger) cubic-bezier(.2,.8,.3,1), opacity var(--t-lockFlyger); }
+  .gift.open .box { animation: boing var(--t-boing) ease-out; }
+  @keyframes boing { 30% { transform: scaleY(.85) scaleX(1.08); } 60% { transform: scaleY(1.05); } }
+  /* Ljuset som strömmar ur det öppna paketet upp mot kortet */
+  .beam {
+    position: absolute; left: 50%; bottom: 104px; width: 340px; height: 170px; z-index: -1;
+    transform: translateX(-50%) scaleY(0); transform-origin: 50% 100%; opacity: 0; pointer-events: none;
+    clip-path: polygon(0 0, 100% 0, 69% 100%, 31% 100%);   /* smal nertill, bred upptill */
+    background:
+      repeating-conic-gradient(from -45deg at 50% 100%, rgba(255,250,220,.28) 0deg 2.5deg, transparent 2.5deg 7deg),
+      linear-gradient(to top, rgba(255,236,170,.85), rgba(255,215,120,.35) 55%, rgba(255,215,120,0));
+    -webkit-mask: linear-gradient(to top, black 30%, transparent);
+    mask: linear-gradient(to top, black 30%, transparent);
+  }
+  .gift.open .beam {
+    animation: beamIn var(--t-ljusIn) ease-out forwards, beamPulse var(--t-ljusPuls) ease-in-out var(--t-ljusIn) infinite;
+  }
+  @keyframes beamIn { to { transform: translateX(-50%) scaleY(1); opacity: 1; } }
+  @keyframes beamPulse { 50% { filter: brightness(1.35); } }
+  /* Det lysande hålet i paketet */
+  .gift .box::after {
+    content: ""; position: absolute; left: 4px; right: 4px; top: -9px; height: 18px; border-radius: 50%;
+    background: radial-gradient(ellipse, #fffbe6 0%, #ffe08a 45%, rgba(242,193,78,0) 75%);
+    box-shadow: 0 0 30px 12px rgba(255,214,110,.55); opacity: 0; transition: opacity var(--t-ljusIn);
+  }
+  .gift.open .box::after { opacity: 1; }
+  /* Kortet ligger ovanpå ljuset och får ett varmt sken underifrån */
+  #reveal .card { position: relative; z-index: 2; box-shadow: 0 30px 60px -28px rgba(255,214,110,.7); }
+
+  /* Diskret tillbaka-pil uppe till vänster */
+  .back-arrow {
+    position: fixed; top: max(14px, env(safe-area-inset-top)); left: 14px; z-index: 6;
+    width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+    background: rgba(255,255,255,.08); color: var(--muted); font-size: 1.4rem; line-height: 1;
+    transition: background .2s, color .2s;
+  }
+  .back-arrow:hover, .back-arrow:active { background: rgba(255,255,255,.18); color: var(--text); }
+  .name .word { display: inline-block; white-space: nowrap; animation: none; }
+  .name span { display: inline-block; animation: letter var(--t-bokstavPop) cubic-bezier(.3,1.8,.5,1) both; white-space: pre; }
+  @keyframes letter { from { opacity: 0; transform: translateY(20px) scale(.3) rotate(-20deg); } to { opacity: 1; transform: none; } }
+  .name.done { animation: shine var(--t-namnGlans) ease-in-out infinite; }
+  @keyframes shine { 0%,100% { text-shadow: 0 0 6px rgba(242,193,78,.4); } 50% { text-shadow: 0 0 22px rgba(242,193,78,.95), 0 0 40px rgba(255,255,255,.4); } }
+  .card .after { opacity: 0; transition: opacity var(--t-detaljerTona); }
+  .card .after.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -118,12 +209,13 @@
     <div class="pad" id="pad"></div>
     <div class="row">
       <button id="back" type="button">⌫ Sudda</button>
-      <button id="clear" type="button">Börja om</button>
+      <button id="enter" type="button" disabled>Ange ✓</button>
     </div>
     <p class="msg" id="msg"></p>
   </section>
 
   <section id="reveal">
+    <button id="hide" class="back-arrow" type="button" aria-label="Tillbaka">←</button>
     <div class="gift wiggle" id="gift" role="button" aria-label="Öppna paketet">
       <div class="box"></div>
       <div class="lid"><span class="bow">🎀</span></div>
@@ -135,7 +227,6 @@
       <div class="name" id="name"></div>
       <div id="details"></div>
       <p class="secret">🤫 Håll det hemligt till julafton!</p>
-      <button id="hide" type="button">Dölj</button>
     </div>
   </section>
 </main>
@@ -143,6 +234,50 @@
 <script>
 (() => {
   "use strict";
+
+  // =====================================================================
+  //  TIDER – ändra här! Alla värden är i millisekunder (1000 = 1 sekund).
+  //  CSS-animationerna läser också härifrån (som --t-namn), så du behöver
+  //  bara ändra på ett ställe.
+  // =====================================================================
+  const T = {
+    // --- Kodinmatning ---
+    emojiPop: 150,          // hur länge en ruta "poppar" upp när man trycker en emoji
+    emojiKnapp: 80,         // knappens tryck-animation på knappsatsen
+    efterSistaEmoji: 0,     // paus efter tredje emojin innan tomten börjar leta
+    letarMinst: 0,          // "Tomten letar i listan…" visas minst så här länge
+    snurr: 1000,            // ett varv för snöflingan som snurrar medan tomten letar
+    felSkak: 450,           // hur länge rutorna skakar vid fel kod
+    felTillbaka: 450,       // väntan innan rutorna töms efter fel kod
+
+    // --- Byte till paketscenen ---
+    bytScen: 0,             // toning in av paketscenen (0 = direkt)
+    paketVickar: 1200,      // ett varv av paketets vickande medan det väntar på tryck
+
+    // --- När man trycker på paketet ---
+    skakning: 1800,         // hur länge paketet skakar innan det smäller
+    blixt: 600,             // den vita blixten när paketet öppnas
+    lockFlyger: 900,        // locket som flyger iväg
+    boing: 500,             // paketet som studsar när det öppnas
+    ljusIn: 900,            // ljuset ur paketet växer upp mot kortet
+    ljusPuls: 3000,         // ett andetag för ljusets svaga pulserande
+    konfettiVanster: 2500,  // extra konfettismäll nere till vänster (räknat från smällen)
+    konfettiHoger: 4000,    // extra konfettismäll nere till höger (räknat från smällen)
+    konfettiLivslangd: 3700,// hur länge en konfettibit lever
+    snoYra: 2700,           // hur länge det snöar extra mycket efter smällen
+    kortEfterSmall: 350,    // väntan från smällen tills kortet med namnet visas
+    kortIn: 700,            // kortet som glider in
+
+    // --- Namnet ---
+    namnStart: 500,         // väntan från att kortet syns tills första bokstaven kommer
+    perBokstav: 90,         // tid mellan varje bokstav
+    bokstavPop: 450,        // en bokstavs studs-animation
+    detaljerEfterNamn: 350, // väntan efter sista bokstaven innan budget/önskemål tonas in
+    detaljerTona: 600,      // toningen av budget/önskemål
+    namnGlans: 2200,        // ett varv av namnets glittrande sken
+  };
+  for (const [k, v] of Object.entries(T)) document.documentElement.style.setProperty("--t-" + k, v + "ms");
+  const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
   const $ = (id) => document.getElementById(id);
   let D = null;             // data.json
   let code = [];            // valda index i paletten
@@ -153,25 +288,36 @@
   let flakes = [], burst = 0;
   function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
   addEventListener("resize", resize); resize();
-  function addFlake(top) {
+  // Vanlig snö: en fast mängd flingor som återanvänds när de fallit ut nertill.
+  // Extra snö (vid smällen): flingor som läggs till ovanför skärmen och tas bort
+  // när de fallit ut – de tränger aldrig undan den vanliga snön.
+  const SNO_VANLIG = 90, SNO_MAX = 450;
+  function addFlake(y, extra) {
     flakes.push({
-      x: Math.random() * cv.width, y: top ? -10 : Math.random() * cv.height,
+      x: Math.random() * cv.width, y,
       r: (Math.random() * 2.5 + 1) * devicePixelRatio, s: Math.random() * .8 + .4,
-      d: Math.random() * Math.PI * 2,
+      d: Math.random() * Math.PI * 2, extra,
     });
   }
-  for (let i = 0; i < 90; i++) addFlake(false);
+  for (let i = 0; i < SNO_VANLIG; i++) addFlake(Math.random() * cv.height, false);
+  let speed = 1;
   (function tick() {
     cx.clearRect(0, 0, cv.width, cv.height);
     cx.fillStyle = "rgba(255,255,255,.85)";
+    // Mjuk övergång till/från snöyran i stället för ett hopp i fart
+    speed += ((burst ? 1.8 : 1) - speed) * .03;
     for (const f of flakes) {
-      f.y += f.s * devicePixelRatio * (burst ? 2.2 : 1); f.d += .01;
+      f.y += f.s * devicePixelRatio * speed; f.d += .01;
       f.x += Math.sin(f.d) * .5 * devicePixelRatio;
-      if (f.y > cv.height + 10) { f.y = -10; f.x = Math.random() * cv.width; }
-      cx.beginPath(); cx.arc(f.x, f.y, f.r, 0, Math.PI * 2); cx.fill();
+      if (f.y > cv.height + 10 && !f.extra) { f.y = -10; f.x = Math.random() * cv.width; }
     }
-    if (burst > 0) { for (let i = 0; i < 4; i++) addFlake(true); burst--; }
-    if (flakes.length > 400) flakes.splice(0, flakes.length - 400);
+    flakes = flakes.filter((f) => !f.extra || f.y <= cv.height + 10);
+    for (const f of flakes) { cx.beginPath(); cx.arc(f.x, f.y, f.r, 0, Math.PI * 2); cx.fill(); }
+    if (burst > 0) {
+      // Spridda starthöjder ovanför skärmen, så att yran kommer jämnt och inte som en vägg
+      for (let i = 0; i < 4 && flakes.length < SNO_MAX; i++) addFlake(-10 - Math.random() * cv.height * .4, true);
+      burst--;
+    }
     requestAnimationFrame(tick);
   })();
 
@@ -211,8 +357,18 @@
       el.className = "slot" + (code[i] !== undefined ? " filled" : "") + (pop && i === code.length - 1 ? " pop" : "");
       el.textContent = code[i] !== undefined ? D.palette[code[i]] : "";
       s.appendChild(el);
-      if (pop && i === code.length - 1) setTimeout(() => el.classList.remove("pop"), 150);
+      if (pop && i === code.length - 1) setTimeout(() => el.classList.remove("pop"), T.emojiPop);
     }
+    updateEnter();
+  }
+  // Ange-knappen går bara att trycka på när koden är komplett.
+  function updateEnter() {
+    const full = code.length === D.codeLength && !busy, b = $("enter");
+    b.disabled = !full; b.classList.toggle("ready", full);
+  }
+  function submit() {
+    if (busy || code.length !== D.codeLength) return;
+    busy = true; updateEnter(); setTimeout(check, T.efterSistaEmoji);
   }
   function msg(t, err) { const m = $("msg"); m.innerHTML = t; m.className = "msg" + (err ? " err" : ""); }
 
@@ -220,34 +376,34 @@
     if (busy || code.length >= D.codeLength) return;
     code.push(i); renderSlots(true); msg("");
     if (navigator.vibrate) navigator.vibrate(15);
-    if (code.length === D.codeLength) check();
   }
 
   async function check() {
     busy = true;
     msg('<span class="spinner">❄️</span> Tomten letar i listan…');
     try {
+      const started = Date.now();
       const [ek, mk] = await deriveKeys(code);
-      for (const e of D.entries) {
-        const r = await tryOpen(ek, mk, e);
-        if (r) { show(r); return; }
-      }
+      let found = null;
+      for (const e of D.entries) { found = await tryOpen(ek, mk, e); if (found) break; }
+      await wait(T.letarMinst - (Date.now() - started));
+      if (found) { show(found); return; }
       const s = $("slots"); s.classList.add("shake");
-      setTimeout(() => s.classList.remove("shake"), 500);
+      setTimeout(() => s.classList.remove("shake"), T.felSkak + 50);
       if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
       msg("🎅 Hmm, den koden känner inte tomten igen. Prova igen!", true);
-      code = []; setTimeout(() => renderSlots(false), 450);
+      code = []; setTimeout(() => renderSlots(false), T.felTillbaka);
     } catch (err) {
       console.error(err); msg("Något gick fel 😕 Ladda om sidan och prova igen.", true);
       code = []; renderSlots(false);
-    } finally { busy = false; }
+    } finally { busy = false; updateEnter(); }
   }
 
   function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
 
   function show(r) {
     $("entry").style.display = "none";
-    $("reveal").style.display = "block";
+    $("reveal").style.display = "flex";
     $("hi").textContent = r.fran ? `Hej ${r.fran}! 👋` : "";
     $("name").textContent = r.till;
     let h = "";
@@ -258,20 +414,100 @@
     const g = $("gift");
     g.onclick = () => {
       if (g.classList.contains("open")) return;
-      g.classList.remove("wiggle"); g.classList.add("open");
-      $("hint").style.display = "none"; burst = 120;
-      if (navigator.vibrate) navigator.vibrate([30, 30, 80]);
-      setTimeout(() => { $("card").style.display = "block"; }, 450);
+      openGift(g, r);
     };
   }
 
   $("hide").onclick = () => {
     $("card").style.display = "none"; $("reveal").style.display = "none";
     const g = $("gift"); g.classList.remove("open"); g.classList.add("wiggle"); $("hint").style.display = "";
+    g.classList.remove("rumble"); $("hint").textContent = "Tryck på paketet!";
     $("entry").style.display = "block"; code = []; renderSlots(false); msg("");
   };
   $("back").onclick = () => { if (!busy) { code.pop(); renderSlots(false); msg(""); } };
-  $("clear").onclick = () => { if (!busy) { code = []; renderSlots(false); msg(""); } };
+  $("enter").onclick = submit;
+
+  // Tangentbord på datorn: Enter = Ange (eller öppna paketet), Backsteg = Sudda
+  addEventListener("keydown", (e) => {
+    if (!D) return;
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if ($("reveal").style.display === "flex") $("gift").click(); else submit();
+    } else if (e.key === "Backspace" && $("entry").style.display !== "none") {
+      e.preventDefault(); $("back").click();
+    }
+  });
+
+
+  // ---------- Dramatisk avslöjning ----------
+  const cf = document.createElement("canvas"); cf.id = "confetti"; document.body.appendChild(cf);
+  const fx = cf.getContext("2d"); let bits = [], running = false;
+  function sizeCf() { cf.width = innerWidth * devicePixelRatio; cf.height = innerHeight * devicePixelRatio; }
+  addEventListener("resize", sizeCf); sizeCf();
+  const COLORS = ["#f2c14e", "#c8323c", "#2f7d4f", "#ffffff", "#ff8fa3", "#7fd1ff"];
+  function boom(x, y) {
+    const k = devicePixelRatio;
+    for (let i = 0; i < 180; i++) {
+      const a = -Math.PI / 2 + (Math.random() - .5) * Math.PI * 1.3, v = (Math.random() * 14 + 6) * k;
+      bits.push({ x: x * k, y: y * k, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6.28,
+        vr: (Math.random() - .5) * .4, w: (Math.random() * 6 + 5) * k, h: (Math.random() * 4 + 3) * k,
+        c: COLORS[i % COLORS.length], star: Math.random() < .18, life: 0 });
+    }
+    if (!running) { running = true; requestAnimationFrame(frame); }
+  }
+  function star(c, r) { c.beginPath(); for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5, rr = i % 2 ? r / 2.3 : r; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } c.closePath(); c.fill(); }
+  const LIFE = Math.round(T.konfettiLivslangd / 16.7);  // i bildrutor (ca 60 per sekund)
+  function frame() {
+    fx.clearRect(0, 0, cf.width, cf.height);
+    for (const b of bits) {
+      b.vy += .32 * devicePixelRatio; b.vx *= .985; b.vy *= .985; b.x += b.vx; b.y += b.vy; b.r += b.vr; b.life++;
+      fx.save(); fx.translate(b.x, b.y); fx.rotate(b.r); fx.fillStyle = b.c;
+      fx.globalAlpha = Math.max(0, 1 - b.life / LIFE);
+      if (b.star) star(fx, b.w * 1.1); else fx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h * Math.abs(Math.cos(b.life / 6)));
+      fx.restore();
+    }
+    bits = bits.filter((b) => b.y < cf.height + 40 && b.life < LIFE);
+    if (bits.length) requestAnimationFrame(frame); else { running = false; fx.clearRect(0, 0, cf.width, cf.height); }
+  }
+  const gift0 = $("gift"); const beam = document.createElement("div"); beam.className = "beam"; gift0.appendChild(beam);
+  function typeName(r) {
+    const n = $("name"); n.textContent = ""; n.classList.remove("done");
+    const len = Array.from(r.till).length;
+    n.style.fontSize = len > 14 ? "1.8rem" : len > 10 ? "2.2rem" : "";
+    // Ett ord i taget får inte brytas mitt i, så bokstäverna läggs i ett omslag per ord.
+    const ch = [];
+    r.till.split(" ").forEach((w, wi) => {
+      if (wi) ch.push([n, " "]);
+      const wEl = document.createElement("span"); wEl.className = "word"; n.appendChild(wEl);
+      for (const c of Array.from(w)) ch.push([wEl, c]);
+    });
+    ch.forEach(([parent, c], i) => setTimeout(() => {
+      const s = document.createElement("span"); s.textContent = c; parent.appendChild(s);
+      if (navigator.vibrate) navigator.vibrate(8);
+      if (i === ch.length - 1) setTimeout(() => {
+        n.classList.add("done");
+        document.querySelectorAll(".card .after").forEach((e) => e.classList.add("show"));
+      }, T.detaljerEfterNamn);
+    }, T.namnStart + i * T.perBokstav));
+  }
+  function openGift(g, r) {
+    if (g.classList.contains("rumble")) return;
+    g.classList.remove("wiggle"); g.classList.add("rumble");
+    $("hint").textContent = "Oj oj oj… 😮";
+    if (navigator.vibrate) navigator.vibrate([20, 80, 30, 60, 40, 40, 60, 20, 80]);
+    setTimeout(() => {
+      g.classList.remove("rumble"); g.classList.add("open"); $("hint").style.display = "none";
+      const f = document.createElement("div"); f.className = "flash"; document.body.appendChild(f); setTimeout(() => f.remove(), T.blixt + 100);
+      const b = g.getBoundingClientRect(); boom(b.left + b.width / 2, b.top + b.height / 2);
+      setTimeout(() => boom(innerWidth * .15, innerHeight * .9), T.konfettiVanster);
+      setTimeout(() => boom(innerWidth * .85, innerHeight * .9), T.konfettiHoger);
+      burst = Math.round(T.snoYra / 16.7);
+      if (navigator.vibrate) navigator.vibrate([60, 30, 120]);
+      $("details").classList.add("after"); document.querySelector(".card .secret").classList.add("after");
+      document.querySelectorAll(".card .after").forEach((e) => e.classList.remove("show"));
+      setTimeout(() => { $("card").style.display = "block"; typeName(r); }, T.kortEfterSmall);
+    }, T.skakning);
+  }
 
   // ---------- Start ----------
   fetch("data.json", { cache: "no-store" })
