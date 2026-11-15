@@ -221,13 +221,42 @@ def encrypt(idx, salt, obj):
     return {"n": b64(nonce), "c": b64(ct), "t": b64(tag)}
 
 
-def build_site_data(pairs_with_codes, budget):
+def short_names(people):
+    """Bara förnamn på sidan. Delar flera samma förnamn läggs så mycket av
+    efternamnet till som behövs för att skilja dem åt, t.ex. "Anna S." och "Anna L."."""
+    def split(name):
+        parts = name.split()
+        return parts[0], " ".join(parts[1:])
+
+    groups = {}
+    for p in people:
+        groups.setdefault(split(p["namn"])[0].lower(), []).append(p)
+
+    out = {}
+    for group in groups.values():
+        if len(group) == 1:
+            out[group[0]["namn"].lower()] = split(group[0]["namn"])[0]
+            continue
+        longest = max(len(split(p["namn"])[1]) for p in group)
+        for k in range(1, longest + 1):
+            labels = {}
+            for p in group:
+                first, rest = split(p["namn"])
+                labels[p["namn"].lower()] = (f"{first} {rest[:k]}." if k < len(rest)
+                                             else f"{first} {rest}".strip())
+            if len(set(l.lower() for l in labels.values())) == len(group):
+                break
+        out.update(labels)
+    return out
+
+
+def build_site_data(pairs_with_codes, budget, names):
     salt = secrets.token_bytes(16)
     entries = []
     for giver, receiver, idx in pairs_with_codes:
         entries.append(encrypt(idx, salt, {
-            "fran": giver["namn"],
-            "till": receiver["namn"],
+            "fran": names[giver["namn"].lower()],
+            "till": names[receiver["namn"].lower()],
             "budget": budget,
             "onskemal": receiver["onskemal"],
             "inte_ha": receiver["inte_ha"],
@@ -377,7 +406,7 @@ def cmd_lotta(cfg, force):
     codes = make_codes(len(pairs))
     triples = [(by_name[g], by_name[r], list(c)) for (g, r), c in zip(pairs.items(), codes)]
 
-    site = build_site_data(triples, budget)
+    site = build_site_data(triples, budget, short_names(people))
     DATA_PATH.write_text(json.dumps(site, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     save_draw({"budget": budget, "salt": site["salt"], "skickat": False,
                "par": [[g, r, c] for g, r, c in triples]})
