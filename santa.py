@@ -42,7 +42,7 @@ CONFIG_PATH = HERE / "config.toml"
 DRAW_PATH = HERE / "lottning.dat"   # obfuskerad, så du inte råkar läsa den av misstag
 DATA_PATH = HERE / "data.json"      # det som publiceras på sidan (krypterat)
 
-PALETTE = ["⛄", "🎅", "🎄", "🎁", "⭐", "🦌", "🍪", "🔔", "🧦", "🍬", "🌟", "🧤", "🍭", "🧣", "🛷"]
+PALETTE = ["⛄", "🎅", "🎄", "🎁", "⭐", "🦌", "🍪", "🔔", "🧦", "🍬", "❄️", "🧤", "🍭", "🧣", "🛷"]
 CODE_LENGTH = 3
 PBKDF2_ITER = 250_000   # gör det långsamt att gissa alla 3375 koder, men snabbt nog på en mobil
 
