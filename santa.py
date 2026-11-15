@@ -5,7 +5,7 @@ och utskick av emoji-koder via Gmail.
 
 Flöde:
   python3 santa.py kolla                 Läs in CSV + config, visa deltagare/budget (ingen lottning)
-  python3 santa.py testmejl DIN@ADRESS   Kolla att Gmail-inloggningen funkar
+  python3 santa.py testmejl DIN@ADRESS   Kolla inloggningen och se hur mailet ser ut (påhittad kod)
   python3 santa.py lotta                 Lotta och skriv data.json (krypterad). Visar aldrig vem som har vem.
   git add data.json && git commit -m "Lottning" && git push
   python3 santa.py skicka                Mejla ut koderna (kollar först att sidan har nya data.json)
@@ -21,6 +21,7 @@ import csv
 import getpass
 import hashlib
 import hmac
+import html
 import imaplib
 import json
 import os
@@ -279,30 +280,80 @@ def password():
     return pw.replace(" ", "")
 
 
-def build_mail(cfg, giver, idx, run_id):
+SIGNATUR_TITEL = "Head of Gift Allocation, Secret Santa 2026"
+SIGNATUR_SIDFOT = (
+    "Detta meddelande är konfidentiellt och endast avsett för mottagaren. Det har genererats "
+    "automatiskt och har inte granskats av Albin. Har du fått det av misstag, köp en klapp ändå. "
+    "Tänk på miljön innan du skriver ut detta mejl, och på tomten innan du glömmer klappen."
+)
+
+
+def budget_line(cfg, budget):
+    if cfg.get("budget"):        # fast belopp i config.toml, alltså inte framröstat
+        return f"Budget: {budget} kr."
+    return f"Budgeten röstades fram till {budget} kr."
+
+
+def build_mail(cfg, giver, idx, run_id, budget, kod=None):
+    """Enkelt mail som ser ut som vanlig text, men med stor kod och en knapp.
+    Textversionen skickas med som reserv för mailprogram som inte visar HTML."""
     msg = EmailMessage()
     msg["From"] = f"{cfg.get('avsandarnamn', 'Tomten')} <{cfg['gmail']}>"
     msg["To"] = giver["epost"]
     msg["Subject"] = cfg.get("amne", "🎅 Din Secret Santa-kod!")
     msg["Message-ID"] = make_msgid(idstring=run_id, domain="santa.local")
-    body = [
-        f"Hej {giver['namn']}!",
+
+    namn, url = giver["namn"], cfg["sida_url"]
+    kod = kod or code_str(idx)
+    intro = ("Lottningen är gjord! 🎄 För att Albin inte ska råka se vem du har fått, får du en "
+             "hemlig kod. Knappa in den på julsidan så ser du vem du ska ge en klapp till.")
+    slut = f"{budget_line(cfg, budget)} {cfg.get('extra_text', 'Ta med klappen till julafton!')}"
+
+    text = "\n".join([
+        f"Hej {namn}!",
         "",
-        "Lottningen är gjord! 🎄",
+        intro,
         "",
-        "Din hemliga kod är:",
+        "Din hemliga kod:",
         "",
-        f"        {code_str(idx)}",
+        f"        {kod}",
         "",
-        f"Gå in på {cfg['sida_url']} och knappa in koden",
-        "för att se vem du ska ge en julklapp till.",
+        f"Till julsidan: {url}",
         "",
-        cfg.get("extra_text", "Ta med klappen till julafton!"),
+        slut,
         "",
         "Håll det hemligt! 🤫",
-        "/Tomten",
-    ]
-    msg.set_content("\n".join(body))
+        "",
+        "Vänliga hälsningar",
+        "Clanker-tomten",
+        SIGNATUR_TITEL,
+        "",
+        SIGNATUR_SIDFOT,
+    ])
+    msg.set_content(text)
+
+    e = html.escape
+    font = "font-family:Arial,Helvetica,sans-serif;"
+    msg.add_alternative(f"""\
+<!doctype html>
+<html lang="sv"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;">
+<div style="{font}font-size:15px;line-height:1.5;color:#222;padding:4px 2px;max-width:600px;">
+Hej {e(namn)}!<br><br>
+{e(intro)}<br><br>
+Din hemliga kod:<br>
+<div style="font-size:44px;line-height:1.2;letter-spacing:8px;margin:10px 0 18px;">{e(kod)}</div>
+<a href="{e(url, quote=True)}" style="display:inline-block;background:#2f7d4f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:12px 22px;border-radius:8px;">Till julsidan 🎁</a><br><br>
+{e(slut)}<br><br>
+Håll det hemligt! 🤫<br><br>
+Vänliga hälsningar<br>
+<b>Clanker-tomten</b><br>
+<span style="color:#555;">{e(SIGNATUR_TITEL)}</span>
+<div style="color:#999;font-size:11px;line-height:1.4;margin-top:22px;border-top:1px solid #ddd;padding-top:8px;">{e(SIGNATUR_SIDFOT)}</div>
+</div>
+</body></html>
+""", subtype="html")
     return msg
 
 
@@ -384,13 +435,13 @@ def cmd_kolla(cfg):
 
 
 def cmd_testmejl(cfg, address):
-    msg = EmailMessage()
-    msg["From"] = f"{cfg.get('avsandarnamn', 'Tomten')} <{cfg['gmail']}>"
-    msg["To"] = address
-    msg["Subject"] = "Test från Secret Santa-skriptet"
-    msg.set_content("Om du läser det här funkar inloggningen. 🎅")
+    # Ett exempel på det riktiga mailet, med påhittat namn och en kod som aldrig kan vara giltig
+    # (❓ finns inte i paletten), så testet aldrig avslöjar någons lottning.
+    msg = build_mail(cfg, {"namn": "Testperson", "epost": address}, None,
+                     uuid.uuid4().hex[:8], cfg.get("budget", 300), kod="❓❓❓")
+    msg.replace_header("Subject", "[TEST] " + msg["Subject"])
     send_all(cfg, [msg])
-    print(f"✅ Testmejl skickat till {address}.")
+    print(f"✅ Testmejl skickat till {address}. Det visar hur mailet ser ut, med en påhittad kod.")
 
 
 def cmd_lotta(cfg, force):
@@ -427,7 +478,7 @@ def cmd_skicka(cfg, force):
         sys.exit(f"⏳ Avbryter: {why}.\n   Har du pushat data.json? Pages kan ta någon minut. "
                  f"Kör 'skicka --tvinga' för att skicka ändå.")
     run_id = uuid.uuid4().hex[:8]
-    msgs = [build_mail(cfg, g, c, run_id) for g, r, c in data["par"]]
+    msgs = [build_mail(cfg, g, c, run_id, data["budget"]) for g, r, c in data["par"]]
     pw = send_all(cfg, msgs)
     data["skickat"] = True
     save_draw(data)
@@ -440,7 +491,7 @@ def cmd_skicka_igen(cfg, name):
     data = load_draw()
     for giver, receiver, idx in data["par"]:
         if giver["namn"].lower() == name.strip().lower():
-            msg = build_mail(cfg, giver, idx, uuid.uuid4().hex[:8])
+            msg = build_mail(cfg, giver, idx, uuid.uuid4().hex[:8], data["budget"])
             pw = send_all(cfg, [msg])
             print(f"✅ Skickade om koden till {giver['namn']} ({giver['epost']}).")
             if cfg.get("rensa_skickat", True):
