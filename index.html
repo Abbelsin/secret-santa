@@ -53,6 +53,14 @@
     flex: 1; padding: 14px; border: 0; border-radius: 14px; font-size: 1rem; font-weight: 600;
     background: var(--green); color: var(--text); cursor: pointer;
   }
+  /* Ikoner: samma linjetjocklek och rundade ändar överallt */
+  .ic {
+    width: 1.25em; height: 1.25em; vertical-align: -0.25em; fill: none; stroke: currentColor;
+    stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .row button { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .back-arrow .ic { width: 22px; height: 22px; vertical-align: middle; }
+  .back-arrow { display: grid; place-items: center; }
   /* Ange-knappen: grå tills alla emojis är inknappade, sen grön och pulserande */
   .row #enter { flex: 1.4; background: var(--green); color: white; transition: opacity .2s, transform .1s; }
   .row #enter:disabled { opacity: .35; cursor: default; }
@@ -208,14 +216,14 @@
     <div class="slots" id="slots"></div>
     <div class="pad" id="pad"></div>
     <div class="row">
-      <button id="back" type="button">⌫ Sudda</button>
-      <button id="enter" type="button" disabled>Ange ✓</button>
+      <button id="back" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10l-7-7z"/><path d="m12.5 9.5 5 5m0-5-5 5"/></svg>Sudda</button>
+      <button id="enter" type="button" disabled>Ange<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
     </div>
     <p class="msg" id="msg"></p>
   </section>
 
   <section id="reveal">
-    <button id="hide" class="back-arrow" type="button" aria-label="Tillbaka">←</button>
+    <button id="hide" class="back-arrow" type="button" aria-label="Tillbaka"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></button>
     <div class="gift wiggle" id="gift" role="button" aria-label="Öppna paketet">
       <div class="box"></div>
       <div class="lid"><span class="bow">🎀</span></div>
