@@ -22,6 +22,7 @@ import getpass
 import hashlib
 import hmac
 import html
+import io
 import imaplib
 import json
 import os
@@ -79,9 +80,19 @@ def load_participants(cfg):
     if not csv_path.exists():
         sys.exit(f"Hittar inte CSV-filen: {csv_path}")
     with open(csv_path, newline="", encoding="utf-8-sig") as f:
-        rows = list(csv.DictReader(f))
+        text = f.read()
+    # Svenska Excel/Sheets sparar ofta med semikolon eller tab i stället för komma.
+    # Välj det tecken som förekommer flest gånger på rubrikraden.
+    first_line = text.splitlines()[0] if text.strip() else ""
+    delim = max(",;\t", key=first_line.count)
+    rows = list(csv.DictReader(io.StringIO(text), delimiter=delim))
     if not rows:
         sys.exit("CSV-filen är tom.")
+    bad = [i for i, r in enumerate(rows, start=2) if None in r or None in r.values()]
+    if bad:
+        sys.exit(f"CSV-raderna {', '.join(map(str, bad[:5]))} har fler eller färre kolumner än rubrikraden. "
+                 f"Oftast beror det på ett extra komma eller citattecken i filen. "
+                 f"Ladda ned CSV:n från Google Forms igen och redigera inte filen för hand.")
 
     headers = list(rows[0].keys())
     col = cfg.get("kolumner", {})
