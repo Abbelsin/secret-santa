@@ -330,6 +330,10 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
     intro = ("Lottningen är gjord! 🎄 För att Albin inte ska råka se vem du har fått, får du en "
              "hemlig kod. Knappa in den på hemsidan så ser du vem du ska ge en klapp till.")
     slut = f"{budget_line(cfg, budget)} {cfg.get('extra_text', 'Ta med klappen till julafton!')}"
+    # lank_i_mejl = false: ingen länk alls i mejlet (mejl utan länk fastnar mer sällan i skräpposten).
+    # Länken skickas då på annat sätt, t.ex. i familjechatten.
+    med_lank = cfg.get("lank_i_mejl", True)
+    utan_lank_text = cfg.get("utan_lank_text", "Länken till hemsidan kommer i familjechatten.")
 
     text = "\n".join([
         f"Hej {namn}!",
@@ -340,7 +344,7 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
         "",
         f"        {kod}",
         "",
-        f"Till hemsidan: {url}",
+        f"Till hemsidan: {url}" if med_lank else utan_lank_text,
         "",
         slut,
         "",
@@ -356,6 +360,15 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
 
     e = html.escape
     font = "font-family:Arial,Helvetica,sans-serif;"
+    if med_lank:
+        lank_html = (
+            f'<a href="{e(url, quote=True)}" style="display:inline-block;background:#2f7d4f;color:#ffffff;'
+            f'text-decoration:none;font-weight:bold;font-size:16px;padding:12px 22px;border-radius:8px;">'
+            f'Till hemsidan 🎁</a><br>\n'
+            f'<span style="color:#777;font-size:13px;">Adressen är '
+            f'<a href="{e(url, quote=True)}" style="color:#777;">{e(url)}</a></span>')
+    else:
+        lank_html = e(utan_lank_text)
     msg.add_alternative(f"""\
 <!doctype html>
 <html lang="sv"><head><meta charset="utf-8">
@@ -366,8 +379,7 @@ Hej {e(namn)}!<br><br>
 {e(intro)}<br><br>
 Din hemliga kod:<br>
 <div style="font-size:44px;line-height:1.2;letter-spacing:8px;margin:10px 0 18px;">{e(kod)}</div>
-<a href="{e(url, quote=True)}" style="display:inline-block;background:#2f7d4f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:12px 22px;border-radius:8px;">Till hemsidan 🎁</a><br>
-<span style="color:#777;font-size:13px;">Adressen är <a href="{e(url, quote=True)}" style="color:#777;">{e(url)}</a></span><br><br>
+{lank_html}<br><br>
 {e(slut)}<br><br>
 Håll det hemligt! 🤫<br><br>
 Vänliga hälsningar<br>
