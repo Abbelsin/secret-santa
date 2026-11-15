@@ -32,6 +32,7 @@ import secrets
 import smtplib
 import statistics
 import sys
+import time
 import tomllib
 import urllib.request
 import uuid
@@ -404,6 +405,23 @@ def find_special_folder(imap, flag):
     return None
 
 
+def save_drafts(cfg, msgs):
+    """Lägg mejlen i Gmails utkastmapp i stället för att skicka dem (du klickar Skicka själv)."""
+    if not is_gmail(cfg):
+        sys.exit("Utkast finns bara för Gmail.")
+    imap = imaplib.IMAP4_SSL("imap.gmail.com")
+    imap.login(cfg["gmail"], password(cfg))
+    drafts = find_special_folder(imap, "\\Drafts")
+    if not drafts:
+        sys.exit("Hittade inte utkastmappen via IMAP.")
+    for m in msgs:
+        del m["Message-ID"], m["Date"]     # Gmail sätter egna när du skickar
+        typ, data = imap.append(drafts, "(\\Draft)", imaplib.Time2Internaldate(time.time()), m.as_bytes(policy=m.policy.clone(linesep="\r\n")))
+        if typ != "OK":
+            sys.exit(f"Kunde inte spara utkastet: {data}")
+    imap.logout()
+
+
 def scrub_sent(cfg, pw, msgs):
     """Flytta de skickade mejlen till papperskorgen och töm dem därifrån (Gmail-specifikt)."""
     if not is_gmail(cfg):
@@ -467,12 +485,16 @@ def cmd_kolla(cfg):
     print("✅ En giltig lottning är möjlig. Kör 'lotta' när alla har svarat.")
 
 
-def cmd_testmejl(cfg, address):
+def cmd_testmejl(cfg, address, draft=False):
     # Ett exempel på det riktiga mailet, med påhittat namn och en kod som aldrig kan vara giltig
     # (❓ finns inte i paletten), så testet aldrig avslöjar någons lottning.
     msg = build_mail(cfg, {"namn": "Testperson", "epost": address}, None,
                      uuid.uuid4().hex[:8], cfg.get("budget", 300), kod="❓❓❓")
     msg.replace_header("Subject", "Test: " + msg["Subject"])
+    if draft:
+        save_drafts(cfg, [msg])
+        print(f"✅ Testmejlet ligger i Utkast i Gmail, adresserat till {address}. Öppna det och klicka Skicka.")
+        return
     send_all(cfg, [msg])
     print(f"✅ Testmejl skickat till {address}. Det visar hur mailet ser ut, med en påhittad kod.")
 
@@ -538,7 +560,7 @@ def main():
     ap = argparse.ArgumentParser(description="Secret Santa")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("kolla")
-    t = sub.add_parser("testmejl"); t.add_argument("adress")
+    t = sub.add_parser("testmejl"); t.add_argument("adress"); t.add_argument("--utkast", action="store_true")
     l = sub.add_parser("lotta"); l.add_argument("--ny", action="store_true")
     s = sub.add_parser("skicka"); s.add_argument("--tvinga", action="store_true")
     r = sub.add_parser("skicka-igen"); r.add_argument("namn")
@@ -548,7 +570,7 @@ def main():
     if args.cmd == "kolla":
         cmd_kolla(cfg)
     elif args.cmd == "testmejl":
-        cmd_testmejl(cfg, args.adress)
+        cmd_testmejl(cfg, args.adress, args.utkast)
     elif args.cmd == "lotta":
         cmd_lotta(cfg, args.ny)
     elif args.cmd == "skicka":
