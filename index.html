@@ -255,7 +255,7 @@
     lockFlyger: 900,        // locket som flyger iväg
     boing: 500,             // paketet som studsar när det öppnas
     ljusIn: 900,            // ljuset ur paketet växer upp mot kortet
-    ljusPuls: 3000,         // ett andetag för ljusets svaga pulserande
+    ljusPuls: 5000,         // ett andetag för ljusets svaga pulserande
     konfettiVanster: 2500,  // extra konfettismäll nere till vänster (räknat från smällen)
     konfettiHoger: 4000,    // extra konfettismäll nere till höger (räknat från smällen)
     konfettiLivslangd: 3700,// hur länge en konfettibit lever
@@ -606,15 +606,16 @@
   let lightParts = null, lightMode = "off", lightT0 = 0, lightRaf = 0;
   function buildLight() {
     const rays = [];
-    for (let i = 0; i < 9; i++) {
-      const off = (i / 8 * 2 - 1) * SPREAD * .92 + rnd(-4, 4), w = rnd(14, 32), len = RAYH * rnd(.78, 1);
-      rays.push({ off, ang: Math.atan(off / 150), a: rnd(.35, .75), sp: rnd(1.8, 3.4), ph: rnd(0, 6.3),
+    // Lugnt ljus: få, breda och svaga strålar som bara andas långsamt
+    for (let i = 0; i < 6; i++) {
+      const off = (i / 5 * 2 - 1) * SPREAD * .9 + rnd(-4, 4), w = rnd(22, 38), len = RAYH * rnd(.8, 1);
+      rays.push({ off, ang: Math.atan(off / 150), a: rnd(.22, .42), sp: rnd(6, 10), ph: rnd(0, 6.3),
         img: wedge(Math.round(w * 3.2), Math.round(len), w * .5, w * 2.6, .85, 1.15) });
     }
     return {
       cone: wedge(LW, Math.round(RAYH), SPREAD * 2.1, SPREAD * 2 + 200, .9, 1.35), rays,
-      motes: Array.from({ length: 16 }, () => ({ x: rnd(-SPREAD * .8, SPREAD * .8), s: rnd(1.2, 3), h: rnd(150, 310), d: rnd(3, 6), ph: Math.random() })),
-      sparks: Array.from({ length: 7 }, () => { const y = rnd(40, 270), sp = SPREAD + y * .42; return { x: rnd(-sp, sp), y, d: rnd(1.6, 3.2), ph: Math.random(), s: rnd(5, 9) }; }),
+      motes: Array.from({ length: 5 }, () => ({ x: rnd(-SPREAD * .7, SPREAD * .7), s: rnd(1, 2), h: rnd(150, 280), d: rnd(7, 11), ph: Math.random() })),
+      sparks: Array.from({ length: 0 }, () => { const y = rnd(40, 270), sp = SPREAD + y * .42; return { x: rnd(-sp, sp), y, d: rnd(1.6, 3.2), ph: Math.random(), s: rnd(5, 9) }; }),
     };
   }
   function glow(x, cx, cy, r, sy, stops) {   // rund (eller tillplattad) ljusfläck
@@ -633,7 +634,7 @@
       glow(x, OX, GY + LID.bot + 4, 130, .5, [[0, `rgba(255,210,120,${a * .22})`], [1, "rgba(255,200,100,0)"]]);
     } else if (lightMode === "open") {
       const k = Math.min(1, ms / T.ljusIn), grow = 1 - Math.pow(1 - k, 3);          // ljuset växer upp
-      const breathe = .9 + .1 * Math.sin(t * 2 * Math.PI / (T.ljusPuls / 1000));
+      const breathe = .95 + .05 * Math.sin(t * 2 * Math.PI / (T.ljusPuls / 1000));
       const flare = Math.exp(-t * 2.2);                                             // extra starkt precis vid smällen
       // Den lysande öppningen
       x.globalCompositeOperation = "source-over"; x.globalAlpha = Math.min(1, k * 3);
@@ -645,16 +646,16 @@
       x.globalCompositeOperation = "lighter"; x.globalAlpha = 1;
       glow(x, OX, OY, 175, .55, [[0, `rgba(255,214,130,${(.5 * breathe + .4 * flare) * grow})`], [.4, `rgba(255,190,100,${.14 * grow})`], [1, "rgba(255,190,100,0)"]]);
       const ch = RAYH * grow;
-      x.globalAlpha = .62 * breathe * k; x.drawImage(P.cone, OX - LW / 2, OY - ch, LW, ch);
+      x.globalAlpha = .55 * breathe * k; x.drawImage(P.cone, OX - LW / 2, OY - ch, LW, ch);
       for (const r of P.rays) {
         x.save(); x.translate(OX + r.off, OY); x.rotate(r.ang);
-        x.globalAlpha = k * r.a * (.6 + .4 * Math.sin(t * 2 * Math.PI / r.sp + r.ph));
+        x.globalAlpha = k * r.a * (.85 + .15 * Math.sin(t * 2 * Math.PI / r.sp + r.ph));
         const h = r.img.height * grow; x.drawImage(r.img, -r.img.width / 2, -h, r.img.width, h); x.restore();
       }
       x.globalAlpha = k;
       for (const m of P.motes) {   // guldstoft som stiger
         const p = (t / m.d + m.ph) % 1, a = p < .15 ? p / .15 : p > .7 ? (1 - p) / .3 : 1;
-        glow(x, OX + m.x * (1 + p * .9), OY - 6 - p * m.h, m.s * 3, 1, [[0, `rgba(255,255,240,${a})`], [.3, `rgba(255,225,140,${.8 * a})`], [1, "rgba(255,210,120,0)"]]);
+        glow(x, OX + m.x * (1 + p * .9), OY - 6 - p * m.h, m.s * 3, 1, [[0, `rgba(255,255,240,${.6 * a})`], [.3, `rgba(255,225,140,${.45 * a})`], [1, "rgba(255,210,120,0)"]]);
       }
       for (const s of P.sparks) {  // små tindrande stjärnor
         const p = (t / s.d + s.ph) % 1, a = Math.sin(p * Math.PI) ** 2, sx = OX + s.x, sy = OY - s.y, L = s.s * (.4 + .6 * a);
