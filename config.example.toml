@@ -8,7 +8,7 @@ gmail = "familjens.tomte@gmail.com"
 # smtp_server = "mail.gmx.com"
 # smtp_port = 587
 avsandarnamn = "Tomten"
-amne = "🎅 Din Secret Santa-kod!"
+amne = "Secret Santa 2026 – lottningen är klar"   # undvik emoji och ord som "kod" här, det triggar skräppostfilter
 
 # Adressen till sidan på GitHub Pages
 sida_url = "https://abbelsin.github.io/secret-santa/"

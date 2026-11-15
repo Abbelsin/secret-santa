@@ -36,7 +36,7 @@ import tomllib
 import urllib.request
 import uuid
 from email.message import EmailMessage
-from email.utils import make_msgid
+from email.utils import formatdate, make_msgid
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -317,8 +317,10 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
     msg = EmailMessage()
     msg["From"] = f"{cfg.get('avsandarnamn', 'Tomten')} <{cfg['gmail']}>"
     msg["To"] = giver["epost"]
-    msg["Subject"] = cfg.get("amne", "🎅 Din Secret Santa-kod!")
-    msg["Message-ID"] = make_msgid(idstring=run_id, domain="santa.local")
+    msg["Subject"] = cfg.get("amne", "Secret Santa 2026 – lottningen är klar")
+    msg["Date"] = formatdate(localtime=True)
+    # Riktig domän i Message-ID (avsändarens), påhittade domäner drar till sig skräppostfilter
+    msg["Message-ID"] = make_msgid(idstring=run_id, domain=cfg["gmail"].rsplit("@", 1)[-1])
 
     namn, url = giver["namn"], cfg["sida_url"]
     kod = kod or code_str(idx)
@@ -361,7 +363,8 @@ Hej {e(namn)}!<br><br>
 {e(intro)}<br><br>
 Din hemliga kod:<br>
 <div style="font-size:44px;line-height:1.2;letter-spacing:8px;margin:10px 0 18px;">{e(kod)}</div>
-<a href="{e(url, quote=True)}" style="display:inline-block;background:#2f7d4f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:12px 22px;border-radius:8px;">Till julsidan 🎁</a><br><br>
+<a href="{e(url, quote=True)}" style="display:inline-block;background:#2f7d4f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:12px 22px;border-radius:8px;">Till julsidan 🎁</a><br>
+<span style="color:#777;font-size:13px;">Adressen är <a href="{e(url, quote=True)}" style="color:#777;">{e(url)}</a></span><br><br>
 {e(slut)}<br><br>
 Håll det hemligt! 🤫<br><br>
 Vänliga hälsningar<br>
@@ -467,7 +470,7 @@ def cmd_testmejl(cfg, address):
     # (❓ finns inte i paletten), så testet aldrig avslöjar någons lottning.
     msg = build_mail(cfg, {"namn": "Testperson", "epost": address}, None,
                      uuid.uuid4().hex[:8], cfg.get("budget", 300), kod="❓❓❓")
-    msg.replace_header("Subject", "[TEST] " + msg["Subject"])
+    msg.replace_header("Subject", "Test: " + msg["Subject"])
     send_all(cfg, [msg])
     print(f"✅ Testmejl skickat till {address}. Det visar hur mailet ser ut, med en påhittad kod.")
 
