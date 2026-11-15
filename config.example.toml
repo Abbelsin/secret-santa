@@ -7,6 +7,8 @@ gmail = "familjens.tomte@gmail.com"
 # din adress där, och lösenordet är kontots vanliga). Port 465 (SSL) eller 587 (STARTTLS).
 # smtp_server = "mail.gmx.com"
 # smtp_port = 587
+# Namnet som visas som avsändare. Ta bort raden för att visa kontots eget namn i stället
+# (ett annat namn än kontots kan göra skräppostfilter misstänksamma).
 avsandarnamn = "Tomten"
 amne = "Secret Santa 2026 – lottningen är klar"   # undvik emoji och ord som "kod" här, det triggar skräppostfilter
 

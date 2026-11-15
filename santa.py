@@ -36,7 +36,7 @@ import tomllib
 import urllib.request
 import uuid
 from email.message import EmailMessage
-from email.utils import formatdate, make_msgid
+from email.utils import formataddr, formatdate, make_msgid
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -315,7 +315,9 @@ def build_mail(cfg, giver, idx, run_id, budget, kod=None):
     """Enkelt mail som ser ut som vanlig text, men med stor kod och en knapp.
     Textversionen skickas med som reserv för mailprogram som inte visar HTML."""
     msg = EmailMessage()
-    msg["From"] = f"{cfg.get('avsandarnamn', 'Tomten')} <{cfg['gmail']}>"
+    # Utan avsandarnamn i config visas kontots eget namn (minst risk för skräppost)
+    namn_fran = cfg.get("avsandarnamn", "").strip()
+    msg["From"] = formataddr((namn_fran, cfg["gmail"])) if namn_fran else cfg["gmail"]
     msg["To"] = giver["epost"]
     msg["Subject"] = cfg.get("amne", "Secret Santa 2026 – lottningen är klar")
     msg["Date"] = formatdate(localtime=True)
